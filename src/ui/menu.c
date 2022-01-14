@@ -23,10 +23,10 @@
 
 // We have a screen with the icon and "Bitcoin is ready" for Bitcoin,
 // "Bitcoin Testnet is ready" for Bitcoin Testnet, "Application is ready" for all the altcoins
-UX_STEP_NOCB(ux_menu_ready_step_bitcoin, pnn, {&C_bitcoin_logo, "Bitcoin", "is ready"});
-UX_STEP_NOCB(ux_menu_ready_step_bitcoin_testnet,
+UX_STEP_NOCB(ux_menu_ready_step_ravencoin, pnn, {&C_nanos_badge_ravencoin, "Ravencoin", "is ready"});
+UX_STEP_NOCB(ux_menu_ready_step_ravencoin_testnet,
              pnn,
-             {&C_bitcoin_logo, "Bitcoin Testnet", "is ready"});
+             {&C_nanos_badge_ravencoin, "RVN Testnet", "is ready"});
 UX_STEP_NOCB(ux_menu_ready_step_altcoin, nn, {"Application", "is ready"});
 
 UX_STEP_NOCB(ux_menu_version_step, bn, {"Version", APPVERSION});
@@ -38,8 +38,8 @@ UX_STEP_VALID(ux_menu_exit_step, pb, os_sched_exit(-1), {&C_icon_dashboard_x, "Q
 // #2 screen: version of the app
 // #3 screen: about submenu
 // #4 screen: quit
-UX_FLOW(ux_menu_main_flow_bitcoin,
-        &ux_menu_ready_step_bitcoin,
+UX_FLOW(ux_menu_main_flow_ravencoin,
+        &ux_menu_ready_step_ravencoin,
         &ux_menu_version_step,
         &ux_menu_about_step,
         &ux_menu_exit_step,
@@ -50,8 +50,8 @@ UX_FLOW(ux_menu_main_flow_bitcoin,
 // #2 screen: version of the app
 // #3 screen: about submenu
 // #4 screen: quit
-UX_FLOW(ux_menu_main_flow_bitcoin_testnet,
-        &ux_menu_ready_step_bitcoin_testnet,
+UX_FLOW(ux_menu_main_flow_ravencoin_testnet,
+        &ux_menu_ready_step_ravencoin_testnet,
         &ux_menu_version_step,
         &ux_menu_about_step,
         &ux_menu_exit_step,
@@ -74,16 +74,16 @@ void ui_menu_main() {
         ux_stack_push();
     }
 
-    if (G_coin_config->kind == COIN_KIND_BITCOIN) {
-        ux_flow_init(0, ux_menu_main_flow_bitcoin, NULL);
-    } else if (G_coin_config->kind == COIN_KIND_BITCOIN_TESTNET) {
-        ux_flow_init(0, ux_menu_main_flow_bitcoin_testnet, NULL);
+    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
+        ux_flow_init(0, ux_menu_main_flow_ravencoin, NULL);
+    } else if (G_coin_config->kind == COIN_KIND_RAVENCOIN_TESTNET) {
+        ux_flow_init(0, ux_menu_main_flow_ravencoin_testnet, NULL);
     } else {
         ux_flow_init(0, ux_menu_main_flow_altcoin, NULL);
     }
 }
 
-UX_STEP_NOCB(ux_menu_info_step, bn, {"Bitcoin App", "(c) 2021 Ledger"});
+UX_STEP_NOCB(ux_menu_info_step, bn, {"Ravencoin App", "(c) 2021 Ledger"});
 UX_STEP_CB(ux_menu_back_step, pb, ui_menu_main(), {&C_icon_back, "Back"});
 
 // FLOW for the about submenu:
