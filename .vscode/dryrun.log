@@ -1,6 +1,0 @@
-make --dry-run --keep-going --print-directory
-make: Entering directory '/home/work/Desktop/workspace/app-ravencoin'
-make: Leaving directory '/home/work/Desktop/workspace/app-ravencoin'
- 
-Makefile:19: *** Environment variable BOLOS_SDK is not set.  Stop.
- 
