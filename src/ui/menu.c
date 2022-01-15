@@ -23,10 +23,10 @@
 
 // We have a screen with the icon and "Bitcoin is ready" for Bitcoin,
 // "Bitcoin Testnet is ready" for Bitcoin Testnet, "Application is ready" for all the altcoins
-UX_STEP_NOCB(ux_menu_ready_step_ravencoin, pnn, {&C_nanos_badge_ravencoin, "Ravencoin", "is ready"});
+UX_STEP_NOCB(ux_menu_ready_step_ravencoin, pnn, {&C_icon_ravencoin, "Ravencoin", "is ready"});
 UX_STEP_NOCB(ux_menu_ready_step_ravencoin_testnet,
              pnn,
-             {&C_nanos_badge_ravencoin, "RVN Testnet", "is ready"});
+             {&C_icon_ravencoin, "RVN Testnet", "is ready"});
 UX_STEP_NOCB(ux_menu_ready_step_altcoin, nn, {"Application", "is ready"});
 
 UX_STEP_NOCB(ux_menu_version_step, bn, {"Version", APPVERSION});
@@ -83,7 +83,7 @@ void ui_menu_main() {
     }
 }
 
-UX_STEP_NOCB(ux_menu_info_step, bn, {"Ravencoin App", "(c) 2021 Ledger"});
+UX_STEP_NOCB(ux_menu_info_step, bn, {"Ravencoin App", "(c) 2022 Ledger"});
 UX_STEP_CB(ux_menu_back_step, pb, ui_menu_main(), {&C_icon_back, "Back"});
 
 // FLOW for the about submenu:
