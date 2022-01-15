@@ -34,11 +34,10 @@ def sign_from_json(cmd, filepath: Path):
                            lock_time=tx_dct["lock_time"])
 
     expected_tx = CTransaction.from_bytes(bytes.fromhex(tx_dct["raw"]))
-    witnesses = expected_tx.wit.vtxinwit
-    for witness, (tx_hash_digest, sign_pub_key, (v, der_sig)) in zip(witnesses, sigs):
-        expected_der_sig, expected_pubkey = witness.scriptWitness.stack
-        assert expected_pubkey == sign_pub_key
-        assert expected_der_sig == der_sig
+    
+    expected_sigs = {vin.prevout: vin.scriptSig.hex() for vin in expected_tx.vin}
+
+    for (tx_hash_digest, sign_pub_key, (v, der_sig)) in sigs:
         pk: VerifyingKey = VerifyingKey.from_string(
             sign_pub_key,
             curve=SECP256k1,
@@ -48,6 +47,14 @@ def sign_from_json(cmd, filepath: Path):
                                 digest=tx_hash_digest,
                                 sigdecode=sigdecode_der) is True
 
+        print(tx_hash_digest.hex())
+        print(sign_pub_key.hex())
+        print(v)
+        print(der_sig.hex())
+
+        print(expected_sigs)
+
+        return
 
 def test_untrusted_hash_sign_fail_nonzero_p1_p2(cmd, transport):
     # payloads do not matter, should check and fail before checking it (but non-empty is required)
@@ -65,16 +72,16 @@ def test_untrusted_hash_sign_fail_short_payload(cmd, transport):
     assert sw == 0x6700
 
 
-@automation("automations/accept.json")
-def test_sign_p2wpkh_accept(cmd):
-    for filepath in Path("data").rglob("p2wpkh/tx.json"):
-        sign_from_json(cmd, filepath)
+#@automation("automations/accept.json")
+#def test_sign_p2wpkh_accept(cmd):
+#    for filepath in Path("data").rglob("p2wpkh/tx.json"):
+#        sign_from_json(cmd, filepath)
 
 
-@automation("automations/accept.json")
-def test_sign_p2sh_p2wpkh_accept(cmd):
-    for filepath in Path("data").rglob("p2sh-p2wpkh/tx.json"):
-        sign_from_json(cmd, filepath)
+#@automation("automations/accept.json")
+#def test_sign_p2sh_p2wpkh_accept(cmd):
+#    for filepath in Path("data").rglob("p2sh-p2wpkh/tx.json"):
+#        sign_from_json(cmd, filepath)
 
 
 @automation("automations/accept.json")
@@ -82,8 +89,7 @@ def test_sign_p2pkh_accept(cmd):
     for filepath in Path("data").rglob("p2pkh/tx.json"):
         sign_from_json(cmd, filepath)
 
-
-@automation("automations/reject.json")
-def test_sign_fail_p2pkh_reject(cmd):
-    with pytest.raises(ConditionOfUseNotSatisfiedError):
-        sign_from_json(cmd, "./data/one-to-one/p2pkh/tx.json")
+#@automation("automations/reject.json")
+#def test_sign_fail_p2pkh_reject(cmd):
+#    with pytest.raises(ConditionOfUseNotSatisfiedError):
+#        sign_from_json(cmd, "./data/one-to-one/p2pkh/tx.json")

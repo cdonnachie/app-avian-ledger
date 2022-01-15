@@ -349,6 +349,28 @@ class BitcoinCommandBuilder:
                                  p2=p2,
                                  cdata=ctxout.serialize())
 
+    def sign_message(self, message: bytes, bip32_path: str):
+        cdata = bytearray()
+
+        bip32_path: List[bytes] = bip32_path_from_string(bip32_path)
+
+        # split message in 64-byte chunks (last chunk can be smaller)
+        n_chunks = (len(message) + 63) // 64
+        chunks = [message[64 * i: 64 * i + 64] for i in range(n_chunks)]
+
+        cdata += len(bip32_path).to_bytes(1, byteorder="big")
+        cdata += b''.join(bip32_path)
+
+        cdata += write_varint(len(message))
+
+        cdata += MerkleTree(element_hash(c) for c in chunks).root
+
+        return self.serialize(
+            cla=self.CLA,
+            ins=BitcoinInsType.SIGN_MESSAGE,
+            cdata=bytes(cdata)
+        )
+
     def untrusted_hash_sign(self,
                             sign_path: str,
                             lock_time: int = 0,
