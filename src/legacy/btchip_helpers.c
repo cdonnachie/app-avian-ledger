@@ -32,35 +32,190 @@ const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE[] = {
     0x17, 0xA9, 0x14}; // script length, OP_HASH160, address length
 const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2SH_POST[] = {0x87}; // OP_EQUAL
 
-const unsigned char ZEN_TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE[] = {
-        0x3D, 0xA9,
-        0x14}; // script length, OP_HASH160, address length
-
-const unsigned char ZEN_TRANSACTION_OUTPUT_SCRIPT_P2SH_POST[] = {
-        0x87, // OP_EQUAL
-        0x20, 0x9E, 0xC9, 0x84, 0x5A, 0xCB, 0x02, 0xFA, 0XB2, 0X4E,
-        0x1C, 0x03, 0x68, 0xB3, 0xB5, 0x17, 0xC1, 0xA4, 0x48, 0x8F,
-        0xBA, 0x97, 0xF0, 0xE3, 0x45, 0x9A, 0xC0, 0x53, 0xEA, 0x01,
-        0x00, 0x00, 0x00, // ParamHash
-        0x03, // Push 3 bytes to stack to make ParamHeight line up properly
-        0xC0, 0x1F, 0x02, // ParamHeight (139200) -> hex -> endianness swapped
-        0xB4};            // OP_CHECKBLOCKATHEIGHT
-
 const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE[] = {0x16, 0x00, 0x14};
 const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2WSH_PRE[] = {0x22, 0x00, 0x20};
 
-const unsigned char ZEN_OUTPUT_SCRIPT_PRE[] = {
-    0x3F, 0x76, 0xA9,
-    0x14}; // script length, OP_DUP, OP_HASH160, address length
-const unsigned char ZEN_OUTPUT_SCRIPT_POST[] = {
-    0x88, 0xAC, // OP_EQUALVERIFY, OP_CHECKSIG
-    0x20, 0x9e, 0xc9, 0x84, 0x5a, 0xcb, 0x02, 0xfa, 0xb2, 0x4e, 0x1c, 0x03,
-    0x68, 0xb3, 0xb5, 0x17, 0xc1, 0xa4, 0x48, 0x8f, 0xba, 0x97, 0xf0, 0xe3,
-    0x45, 0x9a, 0xc0, 0x53, 0xea, 0x01, 0x00, 0x00, 0x00, // ParamHash
-    0x03, // Push 3 bytes to stack to make ParamHeight line up properly
-    0xc0, 0x1f, 0x02, // ParamHeight (139200) -> hex -> endianness swapped
-    0xb4              // OP_CHECKBLOCKATHEIGHT
-};                    // BIP0115 Replay Protection
+//RVN
+
+unsigned char btchip_output_script_is_regular_ravencoin_asset(unsigned char *buffer) {
+    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
+        if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_PRE + 1,
+                       sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) - 1) == 0) &&
+            (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) + 20,
+                       TRANSACTION_OUTPUT_SCRIPT_POST,
+                       sizeof(TRANSACTION_OUTPUT_SCRIPT_POST)) == 0)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+unsigned char btchip_output_script_is_p2sh_ravencoin_asset(unsigned char *buffer) {
+    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
+        if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE + 1,
+                       sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) - 1) == 0) &&
+            (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) + 20,
+                       TRANSACTION_OUTPUT_SCRIPT_P2SH_POST,
+                       sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_POST)) == 0)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+//Check lengths etc.
+signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char *buffer, size_t size) {
+    if (btchip_output_script_is_regular(buffer) ||
+            btchip_output_script_is_p2sh(buffer) ||
+            btchip_output_script_is_op_return(buffer) ||
+            (buffer[1] != 0xC0)) {
+        return -1;
+    }
+    if (buffer[2] == 0x50) {
+        if (buffer[3] == 0x50) {
+            //Global restriction
+            if (buffer[4] > 32 || buffer[buffer[4] + 5] > 1) {
+                return -3;
+            }
+            return 3;
+        }
+        //Restricted string
+        if (buffer[3] > 32 || buffer[buffer[3] + 4] > 80) {
+            return -2;
+        }
+        return 2;
+    }
+    //Tagging
+    if (buffer[2] != 0x14 || buffer[buffer[2] + 3] > 32 || buffer[buffer[buffer[2] + 3]] > 1) {
+        return -1;
+    }
+    return 1;
+}
+
+static bool increment_and_check_ptr(unsigned int* ptr, int amt, size_t size) {
+    *ptr += amt;
+    return *ptr >= size || *ptr > INT8_MAX;
+}
+
+//Verify the asset portion of an asset script
+signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size) {
+    // This method is also used in check_output_displayable and needs to ensure no overflows happen from bad scripts
+    unsigned int script_ptr = 1; // Skip the first pushdata op
+    unsigned int op = -1;
+    unsigned int final_op = buffer[0];
+    signed char script_start;
+    unsigned char script_type;
+
+    if (final_op > INT8_MAX || final_op >= size || buffer[final_op] != 0x75) {
+        return -1;
+    }
+    while (script_ptr < final_op - 7) { // Definitely a bad asset script; too short
+        op = buffer[script_ptr++];
+        if (op == 0xC0) {
+            // Verifying script
+            if ((buffer[script_ptr+1] == 0x72) &&
+                (buffer[script_ptr+2] == 0x76) &&
+                (buffer[script_ptr+3] == 0x6E)) {
+                script_ptr += 4;
+            } else {
+                script_ptr += 5;
+            }
+            break;
+        }
+        else if (op <= 0x4E) {
+            if (op < 0x4C) {
+                script_ptr += op;
+            }
+            else if (op == 0x4D) {
+                script_ptr += (buffer[script_ptr] + 1);
+            }
+            else {
+                //There shouldn't be anything pushed larger than 256 bytes in an asset transfer script
+                return -2;
+            }
+        }
+    }
+
+    if (script_ptr > INT8_MAX || script_ptr >= size) {
+        return -3;
+    }
+    
+    script_start = script_ptr;
+    script_type = buffer[script_ptr];
+    if (
+        //Not any known script type
+        !(   
+            script_type == 0x71 ||
+            script_type == 0x6F ||
+            script_type == 0x72 ||
+            script_type == 0x74      
+        )
+        //Or out of bounds
+        ||
+        increment_and_check_ptr(&script_ptr, 1, size)
+    ) {
+        return -4;
+    }
+
+    if (buffer[script_ptr] > 32 || increment_and_check_ptr(&script_ptr, buffer[script_ptr], size)) {
+        return -5;
+    }
+
+    if (script_type != 0x6F) {
+        if (increment_and_check_ptr(&script_ptr, 8, size)) {
+            return -6;
+        }
+        if (script_type != 0x74) {
+            //Divisibility & reissuability
+            if (increment_and_check_ptr(&script_ptr, 2, size)) {
+                return -9;
+            }
+            if (script_type == 0x72) {
+                if (buffer[script_ptr] != 0x75) {
+                    if (increment_and_check_ptr(&script_ptr, 34, size)) {
+                        return -10;
+                    }
+                    if (buffer[script_ptr] != 0x75) {
+                        return -11;
+                    }
+                }
+            } else {
+                if (buffer[script_ptr]) {
+                    if (increment_and_check_ptr(&script_ptr, 35, size)) {
+                        return -10;
+                    }
+                } else {
+                    if (increment_and_check_ptr(&script_ptr, 1, size)) {
+                        return -11;
+                    }
+                }
+            }
+        } else {
+            //Transfer
+            if (buffer[script_ptr] != 0x75) {
+                if (increment_and_check_ptr(&script_ptr, 34, size)) {
+                    return -7;
+                }
+                if (buffer[script_ptr] != 0x75) {
+                    return -8;
+                }
+            }
+        }
+    }
+
+    return script_start;
+}
+
+void btchip_swap_bytes_reversed(unsigned char *target, unsigned char *source,
+                                unsigned char size) {
+    unsigned char i;
+    for (i = 0; i < size; i++) {
+        target[i] = source[i];
+    }
+}
+
+//END RVN
 
 unsigned char btchip_output_script_is_regular(unsigned char *buffer) {
     if (G_coin_config->native_segwit_prefix) {
@@ -93,6 +248,7 @@ unsigned char btchip_output_script_is_p2sh(unsigned char *buffer) {
 }
 
 unsigned char btchip_output_script_is_native_witness(unsigned char *buffer) {
+    /*
     if (G_coin_config->native_segwit_prefix) {
         if ((os_memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE,
                        sizeof(TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE)) == 0) ||
@@ -101,6 +257,7 @@ unsigned char btchip_output_script_is_native_witness(unsigned char *buffer) {
             return 1;
         }
     }
+    */
     return 0;
 }
 

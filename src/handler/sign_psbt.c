@@ -635,6 +635,7 @@ static void check_input_owned(dispatcher_context_t *dc) {
         if (script_type == -1) {
             external = true;  // unknown script, definitely external
             break;
+        /*
         } else if (script_type == SCRIPT_TYPE_P2TR) {
             // taproot input, use PSBT_IN_TAP_BIP32_DERIVATION
             uint8_t key[1 + 32];
@@ -647,6 +648,7 @@ static void check_input_owned(dispatcher_context_t *dc) {
                                                                   sizeof(key),
                                                                   &fingerprint,
                                                                   bip32_path);
+        */
         } else {
             // legacy or segwitv0 input, use PSBT_IN_BIP32_DERIVATION
             uint8_t key[1 + 33];
@@ -940,6 +942,7 @@ static void check_output_owned(dispatcher_context_t *dc) {
         if (script_type == -1) {
             external = true;  // unknown script, definitely external
             break;
+        /*
         } else if (script_type == SCRIPT_TYPE_P2TR) {
             // taproot output, use PSBT_OUT_TAP_BIP32_DERIVATION
             uint8_t key[1 + 32];
@@ -952,6 +955,7 @@ static void check_output_owned(dispatcher_context_t *dc) {
                                                                   sizeof(key),
                                                                   &fingerprint,
                                                                   bip32_path);
+        */
         } else {
             // legacy or segwitv0 output, use PSBT_OUT_BIP32_DERIVATION
             uint8_t key[1 + 33];
@@ -1266,6 +1270,7 @@ static void sign_process_input_map(dispatcher_context_t *dc) {
     uint32_t bip32_path[MAX_BIP32_PATH_STEPS];
     uint32_t fingerprint;
 
+    /*
     if (state->wallet_policy_map.type == TOKEN_TR) {
         // taproot input, use PSBT_IN_TAP_BIP32_DERIVATION
         uint8_t key[1 + 32];
@@ -1278,7 +1283,7 @@ static void sign_process_input_map(dispatcher_context_t *dc) {
                                                               sizeof(key),
                                                               &fingerprint,
                                                               bip32_path);
-    } else {
+    } else { */
         // legacy or segwitv0 input, use PSBT_IN_BIP32_DERIVATION
         uint8_t key[1 + 33];
         key[0] = PSBT_IN_BIP32_DERIVATION;
@@ -1290,7 +1295,7 @@ static void sign_process_input_map(dispatcher_context_t *dc) {
                                                   sizeof(key),
                                                   &fingerprint,
                                                   bip32_path);
-    }
+    //}
 
     if (bip32_path_len < 2) {
         SEND_SW(dc, SW_BAD_STATE);

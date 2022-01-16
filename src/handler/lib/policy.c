@@ -55,7 +55,7 @@ static void update_output_u8(buffer_t *out_buf_ptr, cx_hash_t *hash_context, con
 // Used for some memory optimizations when computing script hashes (e.g. for `sh(wsh(...))`
 // policies).
 static bool is_script_type_short(PolicyNodeType type) {
-    return (type == TOKEN_PKH || type == TOKEN_WPKH || type == TOKEN_SH || type == TOKEN_WSH);
+    return (type == TOKEN_PKH || /*type == TOKEN_WPKH ||*/ type == TOKEN_SH) /*|| type == TOKEN_WSH)*/;
 }
 
 // p2pkh                     ==> legacy address (start with 1 on mainnet, m or n on testnet)
@@ -419,6 +419,7 @@ int get_sortedmulti_script(_policy_parser_args_t *args,
     return result;
 }
 
+/*
 static int get_tr_script(_policy_parser_args_t *args,
                          policy_node_t *policy,
                          buffer_t *out_buf,
@@ -457,6 +458,7 @@ static int get_tr_script(_policy_parser_args_t *args,
     buffer_restore(args->mem, snap);
     return result;
 }
+*/
 
 int _call_get_wallet_script(_policy_parser_args_t *args,
                             policy_node_t *policy,
@@ -466,17 +468,17 @@ int _call_get_wallet_script(_policy_parser_args_t *args,
 
     switch (policy->type) {
         case TOKEN_PKH:
-        case TOKEN_WPKH:
+        //case TOKEN_WPKH:
             return get_pkh_wpkh_script(args, policy, out_buf, hash_context);
         case TOKEN_SH:
-        case TOKEN_WSH:
+        //case TOKEN_WSH:
             return get_sh_wsh_script(args, policy, out_buf, hash_context);
         case TOKEN_MULTI:
             return get_multi_script(args, policy, out_buf, hash_context);
         case TOKEN_SORTEDMULTI:
             return get_sortedmulti_script(args, policy, out_buf, hash_context);
-        case TOKEN_TR:
-            return get_tr_script(args, policy, out_buf, hash_context);
+        //case TOKEN_TR:
+        //    return get_tr_script(args, policy, out_buf, hash_context);
         default:
             return -1;
     }
@@ -511,6 +513,7 @@ int get_policy_address_type(policy_node_t *policy) {
     switch (policy->type) {
         case TOKEN_PKH:
             return ADDRESS_TYPE_LEGACY;
+        /*
         case TOKEN_WPKH:
             return ADDRESS_TYPE_WIT;
         case TOKEN_SH:
@@ -521,6 +524,7 @@ int get_policy_address_type(policy_node_t *policy) {
             return -1;
         case TOKEN_TR:
             return ADDRESS_TYPE_TR;
+        */
         default:
             return -1;
     }

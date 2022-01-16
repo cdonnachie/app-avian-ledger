@@ -48,12 +48,12 @@ typedef struct {
 
 static const token_descriptor_t KNOWN_TOKENS[] = {
     {.type = TOKEN_SH, .name = "sh"},
-    {.type = TOKEN_WSH, .name = "wsh"},
+    //{.type = TOKEN_WSH, .name = "wsh"},
     {.type = TOKEN_PKH, .name = "pkh"},
-    {.type = TOKEN_WPKH, .name = "wpkh"},
+    //{.type = TOKEN_WPKH, .name = "wpkh"},
     {.type = TOKEN_MULTI, .name = "multi"},
-    {.type = TOKEN_SORTEDMULTI, .name = "sortedmulti"},
-    {.type = TOKEN_TR, .name = "tr"}};
+    {.type = TOKEN_SORTEDMULTI, .name = "sortedmulti"}};
+    //{.type = TOKEN_TR, .name = "tr"}};
 
 /**
  * Length of the longest token in the policy wallet descriptor language (not including the
@@ -346,18 +346,18 @@ static int parse_script(buffer_t *in_buf,
     }
 
     switch (token) {
-        case TOKEN_SH:
-        case TOKEN_WSH: {
+        case TOKEN_SH: {
+        //case TOKEN_WSH: {
             if (token == TOKEN_SH) {
                 if (depth != 0) {
                     return -2;  // can only be top-level
                 }
 
-            } else if (token == TOKEN_WSH) {
+            } /*else if (token == TOKEN_WSH) {
                 if (depth != 0 && (context_flags & CONTEXT_WITHIN_SH) == 0) {
                     return -3;  // only top-level or inside sh
                 }
-            }
+            }*/
 
             policy_node_with_script_t *node =
                 (policy_node_with_script_t *) buffer_alloc(out_buf,
@@ -387,8 +387,8 @@ static int parse_script(buffer_t *in_buf,
             break;
         }
         case TOKEN_PKH:
-        case TOKEN_WPKH:
-        case TOKEN_TR:  // not currently supporting x-only keys
+        //case TOKEN_WPKH:
+        //case TOKEN_TR:  // not currently supporting x-only keys
         {
             policy_node_with_key_t *node =
                 (policy_node_with_key_t *) buffer_alloc(out_buf,
@@ -500,7 +500,7 @@ int get_script_type(const uint8_t script[], size_t script_len) {
     if (script_len == 23 && script[0] == 0xa9 && script[1] == 0x14 && script[22] == 0x87) {
         return SCRIPT_TYPE_P2SH;
     }
-
+    /*
     if (script_len == 22 && script[0] == 0x00 && script[1] == 0x14) {
         return SCRIPT_TYPE_P2WPKH;
     }
@@ -512,7 +512,7 @@ int get_script_type(const uint8_t script[], size_t script_len) {
     if (script_len == 34 && script[0] == 0x51 && script[1] == 0x20) {
         return SCRIPT_TYPE_P2TR;
     }
-
+    */
     // unknown
     return -1;
 }
@@ -536,6 +536,7 @@ int get_script_address(const uint8_t script[],
             addr_len =
                 base58_encode_address(script + 2, coin_config->p2sh_version, out, out_len - 1);
             break;
+        /*
         case SCRIPT_TYPE_P2WPKH:
         case SCRIPT_TYPE_P2WSH:
         case SCRIPT_TYPE_P2TR: {
@@ -566,6 +567,7 @@ int get_script_address(const uint8_t script[],
             addr_len = strlen(out);
             break;
         }
+        */
         default:
             return -1;
     }

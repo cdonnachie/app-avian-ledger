@@ -74,14 +74,14 @@ typedef struct {
 
 typedef enum {
     TOKEN_SH,
-    TOKEN_WSH,
+    // TOKEN_WSH,
     // TOKEN_PK,       // disabled, but it will be needed for taproot
     TOKEN_PKH,
-    TOKEN_WPKH,
+    // TOKEN_WPKH,
     // TOKEN_COMBO     // disabled, does not mix well with the script policy language
     TOKEN_MULTI,
     TOKEN_SORTEDMULTI,
-    TOKEN_TR,
+    // TOKEN_TR,
     // TOKEN_ADDR,     // unsupported
     // TOKEN_RAW,      // unsupported
 } PolicyNodeType;
@@ -116,9 +116,9 @@ typedef struct {
 typedef enum {
     SCRIPT_TYPE_P2PKH = 0x00,
     SCRIPT_TYPE_P2SH = 0x01,
-    SCRIPT_TYPE_P2WPKH = 0x02,
-    SCRIPT_TYPE_P2WSH = 0x03,
-    SCRIPT_TYPE_P2TR = 0x04
+    //SCRIPT_TYPE_P2WPKH = 0x02,
+    //SCRIPT_TYPE_P2WSH = 0x03,
+    //SCRIPT_TYPE_P2TR = 0x04
 } script_type_e;
 
 /**

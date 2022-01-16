@@ -300,16 +300,16 @@ static bool is_policy_acceptable(policy_node_t *policy) {
 
     if (policy->type == TOKEN_SH) {
         policy_node_t *child_node = ((policy_node_with_script_t *) policy)->script;
-        if (child_node->type == TOKEN_WSH) {
+        //if (child_node->type == TOKEN_WSH) {
             // sh(wsh({sorted}multi(@0)))
-            internal_script = ((policy_node_with_script_t *) child_node)->script;
-        } else {
+        //    internal_script = ((policy_node_with_script_t *) child_node)->script;
+        //} else {
             // sh({sorted}multi(@0))
             internal_script = child_node;
-        }
-    } else if (policy->type == TOKEN_WSH) {
+        //}
+    //} else if (policy->type == TOKEN_WSH) {
         // wsh({sorted}multi(@0))
-        internal_script = ((policy_node_with_script_t *) policy)->script;
+    //    internal_script = ((policy_node_with_script_t *) policy)->script;
     } else {
         return false;  // unexpected policy
     }

@@ -35,11 +35,11 @@
 // Legacy address. P2PKH for single sig, P2SH for scripts.
 #define ADDRESS_TYPE_LEGACY 1
 // Native segwit. P2WPKH for single sig, P2WPSH for scripts.
-#define ADDRESS_TYPE_WIT 2
+//#define ADDRESS_TYPE_WIT 2
 // Nested segwit. P2SH-P2WPKH for single sig, P2SH-P2WPSH for scripts.
-#define ADDRESS_TYPE_SH_WIT 3
+//#define ADDRESS_TYPE_SH_WIT 3
 // Taproot P2TR
-#define ADDRESS_TYPE_TR 4
+//#define ADDRESS_TYPE_TR 4
 
 /**
  * Read BIP32 path from byte buffer.

@@ -73,13 +73,15 @@ unsigned short btchip_apdu_hash_input_start() {
         // btchip_context_D.transactionContext.consumeP2SH =
         // ((N_btchip.bkp.config.options & BTCHIP_OPTION_SKIP_2FA_P2SH) != 0);
         if (G_io_apdu_buffer[ISO_OFFSET_P1] == P1_FIRST) {
-            unsigned char usingSegwit =
+            
+            unsigned char usingSegwit = 0;
+                /*
                 (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NEW_SEGWIT) ||
                 (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NEW_SEGWIT_CASHADDR) ||
                 (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NEW_SEGWIT_OVERWINTER) ||
                 (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NEW_SEGWIT_SAPLING);
-            unsigned char usingCashAddr =
-                (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NEW_SEGWIT_CASHADDR);
+                */
+
             // Request PIN validation
             // Only request PIN validation (user presence) to start a new
             // transaction signing flow.
@@ -94,12 +96,8 @@ unsigned short btchip_apdu_hash_input_start() {
             btchip_context_D.transactionContext.firstSigned = 1;
             btchip_context_D.transactionContext.consumeP2SH = 0;
             btchip_context_D.transactionContext.relaxed = 0;
-            btchip_context_D.usingSegwit = usingSegwit;
-            btchip_context_D.usingCashAddr = 0;
-            
-            btchip_context_D.usingOverwinter = 0;
-            
-            btchip_context_D.overwinterSignReady = 0;
+            btchip_context_D.usingSegwit = usingSegwit;            
+           
             btchip_context_D.segwitParsedOnce = 0;
             btchip_set_check_internal_structure_integrity(1);
             // Initialize for screen pairing
@@ -115,6 +113,7 @@ unsigned short btchip_apdu_hash_input_start() {
     }
 
     // In segwit mode, warn user one time only to update its client wallet...
+    /*
     if (btchip_context_D.usingSegwit
         && !btchip_context_D.segwitWarningSeen
         &&(G_io_apdu_buffer[ISO_OFFSET_P1] == P1_NEXT)
@@ -125,14 +124,14 @@ unsigned short btchip_apdu_hash_input_start() {
     {
         if(btchip_context_D.called_from_swap){
             /* There is no point in displaying a warning when the app is signing
-            in silent mode, as its UI is hidden behind the exchange app*/
+            in silent mode, as its UI is hidden behind the exchange app/
             return BTCHIP_SW_SWAP_WITHOUT_TRUSTED_INPUTS;
         }
         btchip_context_D.segwitWarningSeen = 1;
         btchip_context_D.io_flags |= IO_ASYNCH_REPLY;
         btchip_bagl_request_segwit_input_approval();
     }
-
+    */
     // Start parsing of the 1st chunk
     btchip_context_D.transactionBufferPointer =
         G_io_apdu_buffer + ISO_OFFSET_CDATA;

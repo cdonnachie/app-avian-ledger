@@ -30,6 +30,25 @@
 
 #define OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET 3
 
+typedef struct {
+    uint8_t asset_type;
+    uint8_t asset_name_ptr;
+    uint8_t asset_name_len;
+    uint8_t has_associated_data;
+    uint8_t associated_data_ptr;
+} asset_data_t;
+
+//RVN
+
+unsigned char btchip_output_script_is_regular_ravencoin_asset(unsigned char *buffer);
+unsigned char btchip_output_script_is_p2sh_ravencoin_asset(unsigned char *buffer);
+signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char *buffer, size_t size);
+signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size);
+void btchip_swap_bytes_reversed(unsigned char *target, unsigned char *source,
+                       unsigned char size);
+
+//END RVN
+
 unsigned char btchip_output_script_is_regular(unsigned char *buffer);
 unsigned char btchip_output_script_is_p2sh(unsigned char *buffer);
 unsigned char btchip_output_script_is_op_return(unsigned char *buffer);
