@@ -30,7 +30,7 @@ union display_variables {
         
         //RVN
         char ipfs[80];
-        char divisions[10]; //UNCHANGED
+        char divisions[11]; //UNCHANGED
         char reissuable[6];
         char verifier_string[81];
         char h160[41];

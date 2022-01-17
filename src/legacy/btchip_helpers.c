@@ -97,43 +97,33 @@ static bool increment_and_check_ptr(unsigned int* ptr, int amt, size_t size) {
 //Verify the asset portion of an asset script
 signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size) {
     // This method is also used in check_output_displayable and needs to ensure no overflows happen from bad scripts
+    
     unsigned int script_ptr = 1; // Skip the first pushdata op
-    unsigned int op = -1;
     unsigned int final_op = buffer[0];
     signed char script_start;
     unsigned char script_type;
 
-    if (final_op > INT8_MAX || final_op >= size || buffer[final_op] != 0x75) {
+    if (final_op >= size || buffer[final_op] != 0x75) {
         return -1;
     }
-    while (script_ptr < final_op - 7) { // Definitely a bad asset script; too short
-        op = buffer[script_ptr++];
-        if (op == 0xC0) {
-            // Verifying script
-            if ((buffer[script_ptr+1] == 0x72) &&
-                (buffer[script_ptr+2] == 0x76) &&
-                (buffer[script_ptr+3] == 0x6E)) {
-                script_ptr += 4;
-            } else {
-                script_ptr += 5;
-            }
-            break;
-        }
-        else if (op <= 0x4E) {
-            if (op < 0x4C) {
-                script_ptr += op;
-            }
-            else if (op == 0x4D) {
-                script_ptr += (buffer[script_ptr] + 1);
-            }
-            else {
-                //There shouldn't be anything pushed larger than 256 bytes in an asset transfer script
-                return -2;
-            }
-        }
+
+    if (buffer[24] == 0xC0) {
+        script_ptr = 25;
+    } else if (buffer[26] == 0xC0) {
+        script_ptr = 27;
+    } else {
+        return -2;
     }
 
-    if (script_ptr > INT8_MAX || script_ptr >= size) {
+    if ((buffer[script_ptr+1] == 0x72) &&
+        (buffer[script_ptr+2] == 0x76) &&
+        (buffer[script_ptr+3] == 0x6E)) {
+        script_ptr += 4;
+    } else if ((buffer[script_ptr+2] == 0x72) &&
+        (buffer[script_ptr+3] == 0x76) &&
+        (buffer[script_ptr+4] == 0x6E)) {
+        script_ptr += 5;
+    } else {
         return -3;
     }
     
@@ -198,6 +188,11 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
                 }
             }
         }
+    }
+
+    //Must end with OP_DROP
+    if (buffer[script_ptr] != 0x75) {
+        return -9;
     }
 
     return script_start;

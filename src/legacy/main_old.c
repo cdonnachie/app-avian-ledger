@@ -415,6 +415,72 @@ UX_FLOW(ux_confirm_single_flow_asset_message,
 //////////////////////////////////////////////////////////////////////
 
 UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_reissue_step_0,
+    pnn,
+    {
+      &C_icon_eye,
+      "Reissuance",
+      vars.tmp.feesAmount, // output #
+    });
+
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_reissue_step_1,
+    bnnn_paging,
+    {
+      .title = "Divisibility",
+      .text = vars.tmp.divisions,
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_reissue_step_2,
+    bnnn_paging,
+    {
+      .title = "Reissuable",
+      .text = vars.tmp.reissuable,
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_reissue_step_3,
+    bnnn_paging,
+    {
+      .title = "IPFS",
+      .text = vars.tmp.ipfs,
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_reissue,
+  &ux_confirm_single_flow_asset_reissue_step_0,
+  &ux_confirm_single_flow_2_step,
+  &ux_confirm_single_flow_3_step,
+  &ux_confirm_single_flow_asset_reissue_step_1,
+  &ux_confirm_single_flow_asset_reissue_step_2,
+  &ux_confirm_single_flow_asset_reissue_step_3,
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
+);
+
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_new_step_0,
+    pnn,
+    {
+      &C_icon_eye,
+      "Creation",
+      vars.tmp.feesAmount, // output #
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_new,
+  &ux_confirm_single_flow_asset_new_step_0,
+  &ux_confirm_single_flow_2_step,
+  &ux_confirm_single_flow_3_step,
+  &ux_confirm_single_flow_asset_reissue_step_1,
+  &ux_confirm_single_flow_asset_reissue_step_2,
+  &ux_confirm_single_flow_asset_reissue_step_3,
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
+);
+
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
     ux_confirm_single_flow_asset_tag_1_step,
     pnn,
     {
@@ -1116,8 +1182,64 @@ uint8_t prepare_single_output() {
         return 5;
       } else if (type == 0x72) {
         //Reissue
+        type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Divisions
+        asset_ptr += 1;
+
+        if (type == 0xFF) {
+          snprintf(vars.tmp.divisions, 4, "%d", type);
+        } else {
+          strncpy(vars.tmp.divisions, "UNCHANGED", 10);
+        }
+
+        type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Reissuability
+        asset_ptr += 1;
+        if (type) {
+          strncpy(vars.tmp.reissuable, "TRUE", 5);
+        } else {
+          strncpy(vars.tmp.reissuable, "FALSE", 6);
+        }
+
+        if ((btchip_context_D.currentOutput + offset)[asset_ptr] != 0x75) {
+          str_len = base58_encode(&(btchip_context_D.currentOutput + offset)[asset_ptr], 34, vars.tmp.ipfs, 70);
+          if (str_len > 0) {
+            vars.tmp.ipfs[str_len] = 0;
+          } else {
+            vars.tmp.ipfs[0] = 0;
+          }
+        } else {
+          strncpy(vars.tmp.ipfs, "NONE", 5);
+        }
+
+        return 6;
       } else if (type == 0x71) {
         //New
+        type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Divisions
+        asset_ptr += 1;
+        snprintf(vars.tmp.divisions, 4, "%d", type);
+
+        type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Reissuability
+        asset_ptr += 1;
+        if (type) {
+          strncpy(vars.tmp.reissuable, "TRUE", 5);
+        } else {
+          strncpy(vars.tmp.reissuable, "FALSE", 6);
+        }
+
+        type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Has IPFS
+        asset_ptr += 1;
+
+        if (type) {
+          str_len = base58_encode(&(btchip_context_D.currentOutput + offset)[asset_ptr], 34, vars.tmp.ipfs, 70);
+          if (str_len > 0) {
+            vars.tmp.ipfs[str_len] = 0;
+          } else {
+            vars.tmp.ipfs[0] = 0;
+          }
+        } else {
+          strncpy(vars.tmp.ipfs, "NONE", 5);
+        }
+
+        return 7;
       }
     }
 
@@ -1251,6 +1373,12 @@ unsigned int btchip_bagl_confirm_single_output() {
         break;
       case 5:
         ux_flow_init(0, ux_confirm_single_flow_asset_message, NULL);
+        break;
+      case 6:
+        ux_flow_init(0, ux_confirm_single_flow_asset_reissue, NULL);
+        break;
+      case 7:
+        ux_flow_init(0, ux_confirm_single_flow_asset_new, NULL);
         break;
       default:
         ux_flow_init(0, ux_confirm_single_flow, NULL);
