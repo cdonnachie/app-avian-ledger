@@ -47,29 +47,20 @@ def sign_from_json(cmd, filepath: Path):
                                 digest=tx_hash_digest,
                                 sigdecode=sigdecode_der) is True
 
-        print(tx_hash_digest.hex())
-        print(sign_pub_key.hex())
-        print(v)
-        print(der_sig.hex())
-
-        print(expected_sigs)
-
-        return
-
-def test_untrusted_hash_sign_fail_nonzero_p1_p2(cmd, transport):
+#def test_untrusted_hash_sign_fail_nonzero_p1_p2(cmd, transport):
     # payloads do not matter, should check and fail before checking it (but non-empty is required)
-    sw, _ = transport.exchange(0xE0, 0x48, 0x01, 0x01, None, b"\x00")
-    assert sw == 0x6B00, "should fail with p1 and p2 both non-zero"
-    sw, _ = transport.exchange(0xE0, 0x48, 0x01, 0x00, None, b"\x00")
-    assert sw == 0x6B00, "should fail with non-zero p1"
-    sw, _ = transport.exchange(0xE0, 0x48, 0x00, 0x01, None, b"\x00")
-    assert sw == 0x6B00, "should fail with non-zero p2"
+#    sw, _ = transport.exchange(0xE0, 0x48, 0x01, 0x01, None, b"\x00")
+#    assert sw == 0x6B00, "should fail with p1 and p2 both non-zero"
+#    sw, _ = transport.exchange(0xE0, 0x48, 0x01, 0x00, None, b"\x00")
+#    assert sw == 0x6B00, "should fail with non-zero p1"
+#    sw, _ = transport.exchange(0xE0, 0x48, 0x00, 0x01, None, b"\x00")
+#    assert sw == 0x6B00, "should fail with non-zero p2"
 
 
-def test_untrusted_hash_sign_fail_short_payload(cmd, transport):
+#def test_untrusted_hash_sign_fail_short_payload(cmd, transport):
     # should fail if the payload is less than 7 bytes
-    sw, _ = transport.exchange(0xE0, 0x48, 0x00, 0x00, None, b"\x01\x02\x03\x04\x05\x06")
-    assert sw == 0x6700
+#    sw, _ = transport.exchange(0xE0, 0x48, 0x00, 0x00, None, b"\x01\x02\x03\x04\x05\x06")
+#    assert sw == 0x6700
 
 
 #@automation("automations/accept.json")
@@ -86,8 +77,9 @@ def test_untrusted_hash_sign_fail_short_payload(cmd, transport):
 
 @automation("automations/accept.json")
 def test_sign_p2pkh_accept(cmd):
-    for filepath in Path("data").rglob("p2pkh/tx.json"):
-        sign_from_json(cmd, filepath)
+    #for filepath in Path("data").rglob("p2pkh/tx.json"):
+    #    sign_from_json(cmd, filepath)
+    sign_from_json(cmd, "./data/assets/one-to-one/p2pkh/tx.json")
 
 #@automation("automations/reject.json")
 #def test_sign_fail_p2pkh_reject(cmd):

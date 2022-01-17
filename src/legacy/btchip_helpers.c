@@ -38,27 +38,23 @@ const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2WSH_PRE[] = {0x22, 0x00, 0x20};
 //RVN
 
 unsigned char btchip_output_script_is_regular_ravencoin_asset(unsigned char *buffer) {
-    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
-        if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_PRE + 1,
-                       sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) - 1) == 0) &&
-            (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) + 20,
-                       TRANSACTION_OUTPUT_SCRIPT_POST,
-                       sizeof(TRANSACTION_OUTPUT_SCRIPT_POST)) == 0)) {
-            return 1;
-        }
+    if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_PRE + 1,
+                    sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) - 1) == 0) &&
+        (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_PRE) + 20,
+                    TRANSACTION_OUTPUT_SCRIPT_POST,
+                    sizeof(TRANSACTION_OUTPUT_SCRIPT_POST)) == 0)) {
+        return 1;
     }
     return 0;
 }
 
 unsigned char btchip_output_script_is_p2sh_ravencoin_asset(unsigned char *buffer) {
-    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
-        if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE + 1,
-                       sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) - 1) == 0) &&
-            (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) + 20,
-                       TRANSACTION_OUTPUT_SCRIPT_P2SH_POST,
-                       sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_POST)) == 0)) {
-            return 1;
-        }
+    if ((os_memcmp(buffer + 1, TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE + 1,
+                    sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) - 1) == 0) &&
+        (os_memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) + 20,
+                    TRANSACTION_OUTPUT_SCRIPT_P2SH_POST,
+                    sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_POST)) == 0)) {
+        return 1;
     }
     return 0;
 }
@@ -72,6 +68,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
             (buffer[1] != 0xC0)) {
         return -1;
     }
+    return -1;
     if (buffer[2] == 0x50) {
         if (buffer[3] == 0x50) {
             //Global restriction
@@ -107,6 +104,8 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
     signed char script_start;
     unsigned char script_type;
 
+
+    return -1;
     if (final_op > INT8_MAX || final_op >= size || buffer[final_op] != 0x75) {
         return -1;
     }

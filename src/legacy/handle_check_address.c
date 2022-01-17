@@ -46,19 +46,10 @@ bool get_address_from_compressed_public_key(
     char * address,
     unsigned char max_address_length
 ) {
-    //bool segwit = (format == P2_SEGWIT);
-    //bool nativeSegwit = (format == P2_NATIVE_SEGWIT);
-    //bool cashAddr = (format == P2_CASHADDR);
+    bool segwit = (format == P2_SEGWIT);
+    bool nativeSegwit = (format == P2_NATIVE_SEGWIT);
     int address_length;
-    /*
-    if (cashAddr) {
-        uint8_t tmp[20];
-        btchip_public_key_hash160(compressed_pub_key,   // IN
-                                  33,                   // INLEN
-                                  tmp);
-        if (!cashaddr_encode(tmp, 20, (uint8_t *)address, max_address_length, CASHADDR_P2PKH))
-            return false;
-    } else if (!(segwit || nativeSegwit)) {*/
+    if (!(segwit || nativeSegwit)) {
         // btchip_public_key_to_encoded_base58 doesn't add terminating 0,
         // so we will do this ourself
         address_length = btchip_public_key_to_encoded_base58(
@@ -68,7 +59,7 @@ bool get_address_from_compressed_public_key(
             max_address_length - 1, // MAXOUTLEN
             payToAddressVersion, 0);
         address[address_length] = 0;
-    /*} else {
+    } else {
         uint8_t tmp[22];
         tmp[0] = 0x00;
         tmp[1] = 0x14;
@@ -94,7 +85,6 @@ bool get_address_from_compressed_public_key(
             }
         }
     }
-    */
     return true;
 }
 

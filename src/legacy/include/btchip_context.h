@@ -24,12 +24,15 @@
 #include "btchip_secure_value.h"
 #include "btchip_filesystem_tx.h"
 
-#define MAX_OUTPUT_TO_CHECK 120
+#define MAX_OUTPUT_TO_CHECK 100
 #define MAX_COIN_ID 13
 #define MAX_SHORT_COIN_ID 5
 
 #define MAGIC_TRUSTED_INPUT 0x32
 #define MAGIC_DEV_KEY 0x01
+
+#define ZCASH_USING_OVERWINTER 0x01
+#define ZCASH_USING_OVERWINTER_SAPLING 0x02
 
 enum btchip_modes_e {
     BTCHIP_MODE_ISSUER = 0x00,
@@ -178,6 +181,7 @@ struct btchip_context_s {
     unsigned char transactionVersion[4];
     unsigned char inputValue[8];
     unsigned char usingSegwit;
+    unsigned char usingCashAddr;
     unsigned char segwitParsedOnce;
     /** Prevents display of segwit input warning at each InputHashStart APDU */
     unsigned char segwitWarningSeen;
@@ -227,6 +231,8 @@ struct btchip_context_s {
     unsigned char changeOutputFound;
 
     /* Overwinter */
+    unsigned char usingOverwinter;
+    unsigned char overwinterSignReady;
     unsigned char nVersionGroupId[4];
     unsigned char nExpiryHeight[4];
     unsigned char nLockTime[4];
@@ -270,6 +276,8 @@ typedef struct btchip_altcoin_config_s {
     char name_short[6]; // for unit in ux displays
     char native_segwit_prefix_val[5];
     const char* native_segwit_prefix; // null if no segwit prefix
+    unsigned int forkid;
+    unsigned int zcash_consensus_branch_id;
     btchip_coin_kind_t kind;
     unsigned int flags;
 } btchip_altcoin_config_t;

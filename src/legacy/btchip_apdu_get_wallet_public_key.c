@@ -56,9 +56,8 @@ unsigned short btchip_apdu_get_wallet_public_key() {
     bool display = (G_io_apdu_buffer[ISO_OFFSET_P1] == P1_DISPLAY);
     bool display_request_token = N_btchip.pubKeyRequestRestriction && (G_io_apdu_buffer[ISO_OFFSET_P1] == P1_REQUEST_TOKEN) && G_io_apdu_media == IO_APDU_MEDIA_U2F;
     bool require_user_approval = N_btchip.pubKeyRequestRestriction && !(display_request_token || display) && G_io_apdu_media == IO_APDU_MEDIA_U2F;
-    //bool segwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_SEGWIT);
-    //bool nativeSegwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NATIVE_SEGWIT);
-    //bool cashAddr = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_CASHADDR);
+    bool segwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_SEGWIT);
+    bool nativeSegwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NATIVE_SEGWIT);
     if (display && btchip_context_D.called_from_swap) {
         return BTCHIP_SW_INCORRECT_DATA;
     }
@@ -72,15 +71,13 @@ unsigned short btchip_apdu_get_wallet_public_key() {
     }
 
     switch (G_io_apdu_buffer[ISO_OFFSET_P2]) {
-    //case P2_NATIVE_SEGWIT:
-    //    if (!(G_coin_config->native_segwit_prefix)) {
-    //        return BTCHIP_SW_INCORRECT_P1_P2;
-    //    }
+    case P2_NATIVE_SEGWIT:
+        if (!(G_coin_config->native_segwit_prefix)) {
+            return BTCHIP_SW_INCORRECT_P1_P2;
+        }
     case P2_LEGACY:
-    //case P2_SEGWIT:
+    case P2_SEGWIT:
         break;
-    //case P2_CASHADDR:
-    //    return BTCHIP_SW_INCORRECT_P1_P2;
     default:
         return BTCHIP_SW_INCORRECT_P1_P2;
     }
@@ -118,22 +115,14 @@ unsigned short btchip_apdu_get_wallet_public_key() {
     G_io_apdu_buffer[0] = 65;
     keyLength = get_public_key_chain_code(G_io_apdu_buffer + ISO_OFFSET_CDATA, uncompressedPublicKeys, G_io_apdu_buffer + 1, chainCode);
 
-    /*
-    if (cashAddr) {
-        uint8_t tmp[20];
-        btchip_public_key_hash160(G_io_apdu_buffer + 1, // IN
-                                  keyLength,            // INLEN
-                                  tmp);
-        keyLength =
-            cashaddr_encode(tmp, 20, G_io_apdu_buffer + 67, 50, CASHADDR_P2PKH);
-    } else if (!(segwit || nativeSegwit)) {
+    if (!(segwit || nativeSegwit)) {
         keyLength = btchip_public_key_to_encoded_base58(
             G_io_apdu_buffer + 1,  // IN
             keyLength,             // INLEN
             G_io_apdu_buffer + 67, // OUT
             150,                   // MAXOUTLEN
             G_coin_config->p2pkh_version, 0);
-    } else {*/
+    } else {
         uint8_t tmp[22];
         tmp[0] = 0x00;
         tmp[1] = 0x14;
@@ -141,14 +130,13 @@ unsigned short btchip_apdu_get_wallet_public_key() {
                                   keyLength,            // INLEN
                                   tmp + 2               // OUT
                                   );
-        //if (!nativeSegwit) {
+        if (!nativeSegwit) {
             keyLength = btchip_public_key_to_encoded_base58(
                 tmp,                   // IN
                 22,                    // INLEN
                 G_io_apdu_buffer + 67, // OUT
                 150,                   // MAXOUTLEN
                 G_coin_config->p2sh_version, 0);
-        /*
         } else {
             if (G_coin_config->native_segwit_prefix) {
                 keyLength = segwit_addr_encode(
@@ -159,7 +147,7 @@ unsigned short btchip_apdu_get_wallet_public_key() {
                 }
             }
         }
-    }*/
+    }
     G_io_apdu_buffer[66] = keyLength;
     PRINTF("Length %d\n", keyLength);
     if (!uncompressedPublicKeys) {
