@@ -1185,7 +1185,7 @@ uint8_t prepare_single_output() {
         type = (btchip_context_D.currentOutput + offset)[asset_ptr]; //Divisions
         asset_ptr += 1;
 
-        if (type == 0xFF) {
+        if (type != 0xFF) {
           snprintf(vars.tmp.divisions, 4, "%d", type);
         } else {
           strncpy(vars.tmp.divisions, "UNCHANGED", 10);
