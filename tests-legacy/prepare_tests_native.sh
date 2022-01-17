@@ -5,5 +5,5 @@ bash ./clean_tests.sh
 
 cd ..
 make clean
-make -j DEBUG=0 COIN=ravencoin
+make -j DEBUG=1 COIN=ravencoin
 mv bin/ tests-legacy/ravencoin-bin

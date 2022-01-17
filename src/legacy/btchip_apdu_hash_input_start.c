@@ -85,7 +85,6 @@ unsigned short btchip_apdu_hash_input_start() {
             btchip_context_D.transactionContext.consumeP2SH = 0;
             btchip_context_D.transactionContext.relaxed = 0;
             btchip_context_D.usingSegwit = usingSegwit;
-            btchip_context_D.usingCashAddr = 0;
                 
             btchip_context_D.segwitParsedOnce = 0;
             btchip_set_check_internal_structure_integrity(1);

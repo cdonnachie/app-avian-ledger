@@ -104,8 +104,6 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
     signed char script_start;
     unsigned char script_type;
 
-
-    return -1;
     if (final_op > INT8_MAX || final_op >= size || buffer[final_op] != 0x75) {
         return -1;
     }
@@ -157,7 +155,7 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
         return -4;
     }
 
-    if (buffer[script_ptr] > 32 || increment_and_check_ptr(&script_ptr, buffer[script_ptr], size)) {
+    if (buffer[script_ptr] > 32 || increment_and_check_ptr(&script_ptr, 1 + buffer[script_ptr], size)) {
         return -5;
     }
 

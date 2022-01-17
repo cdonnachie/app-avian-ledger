@@ -24,7 +24,7 @@
 #include "btchip_secure_value.h"
 #include "btchip_filesystem_tx.h"
 
-#define MAX_OUTPUT_TO_CHECK 100
+#define MAX_OUTPUT_TO_CHECK 120
 #define MAX_COIN_ID 13
 #define MAX_SHORT_COIN_ID 5
 
@@ -178,7 +178,6 @@ struct btchip_context_s {
     unsigned char transactionVersion[4];
     unsigned char inputValue[8];
     unsigned char usingSegwit;
-    unsigned char usingCashAddr;
     unsigned char segwitParsedOnce;
     /** Prevents display of segwit input warning at each InputHashStart APDU */
     unsigned char segwitWarningSeen;
