@@ -71,7 +71,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
     if (buffer[2] == 0x50) {
         if (buffer[3] == 0x50) {
             //Global restriction
-            if (buffer[4] > 32 || buffer[buffer[4] + 5] > 1) {
+            if (buffer[5] > 32) {
                 return -3;
             }
             return 3;

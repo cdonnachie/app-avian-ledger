@@ -492,6 +492,55 @@ UX_FLOW(ux_confirm_single_flow_asset_verifier,
 //////////////////////////////////////////////////////////////////////
 
 UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_freeze_1_step,
+    pnn,
+    {
+      &C_icon_eye,
+      "Review Freeze",
+      vars.tmp.feesAmount, // output #
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_freeze_2_step,
+    bnnn_paging,
+    {
+      .title = "Asset",
+      .text = vars.tmp.fullAmount,
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_freeze_3_step,
+    bnnn_paging,
+    {
+      .title = "Frozen",
+      .text = vars.tmp.reissuable,
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_freeze_4_step,
+    pb,
+    io_seproxyhal_touch_verify_ok(NULL),
+    {
+      &C_icon_validate_14,
+      "Accept",
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_freeze_5_step,
+    pb,
+    io_seproxyhal_touch_verify_cancel(NULL),
+    {
+      &C_icon_crossmark,
+      "Reject",
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_freeze,
+  &ux_confirm_single_flow_asset_freeze_1_step,
+  &ux_confirm_single_flow_asset_freeze_2_step,
+  &ux_confirm_single_flow_asset_freeze_3_step,
+  &ux_confirm_single_flow_asset_freeze_4_step,
+  &ux_confirm_single_flow_asset_freeze_5_step
+);
+
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
     ux_finalize_flow_1_step,
     pnn,
     {
@@ -1028,6 +1077,17 @@ uint8_t prepare_single_output() {
           offset += str_len;
           return 4;
         } else if (type == 3) {
+          offset += 5;
+          str_len = (btchip_context_D.currentOutput + offset)[0];
+          offset += 1;
+          strncpy(vars.tmp.fullAmount, btchip_context_D.currentOutput + offset, str_len);
+          vars.tmp.fullAmount[str_len] = 0;
+          offset += str_len;
+          if ((btchip_context_D.currentOutput + offset)[0]) {
+            strncpy(vars.tmp.reissuable, "TRUE", 5);
+          } else {
+            strncpy(vars.tmp.reissuable, "FALSE", 6);
+          }
           return 5;
         }
       }
@@ -1201,6 +1261,9 @@ unsigned int btchip_bagl_confirm_single_output() {
         break;
       case 4:
         ux_flow_init(0, ux_confirm_single_flow_asset_verifier, NULL);
+        break;
+      case 5:
+        ux_flow_init(0, ux_confirm_single_flow_asset_freeze, NULL);
         break;
       default:
         ux_flow_init(0, ux_confirm_single_flow, NULL);
