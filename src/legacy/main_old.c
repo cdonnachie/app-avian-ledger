@@ -385,6 +385,7 @@ UX_STEP_CB(
       "Reject",
     });
 // confirm_single: confirm output #x(feesAmount) / Amount: fullAmount / Address: fullAddress
+
 UX_FLOW(ux_confirm_single_flow,
   &ux_confirm_single_flow_1_step,
   &ux_confirm_single_flow_2_step,
@@ -392,6 +393,25 @@ UX_FLOW(ux_confirm_single_flow,
   &ux_confirm_single_flow_5_step,
   &ux_confirm_single_flow_6_step
 );
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_message_step,
+    bnnn_paging,
+    {
+      .title = "Message",
+      .text = vars.tmp.ipfs,
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_message,
+  &ux_confirm_single_flow_1_step,
+  &ux_confirm_single_flow_2_step,
+  &ux_confirm_single_flow_3_step,
+  &ux_confirm_single_flow_asset_message_step,
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
+);
+
 //////////////////////////////////////////////////////////////////////
 
 UX_STEP_NOCB(
@@ -423,30 +443,14 @@ UX_STEP_NOCB(
       .title = "Flag",
       .text = vars.tmp.reissuable,
     });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_tag_5_step,
-    pb,
-    io_seproxyhal_touch_verify_ok(NULL),
-    {
-      &C_icon_validate_14,
-      "Accept",
-    });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_tag_6_step,
-    pb,
-    io_seproxyhal_touch_verify_cancel(NULL),
-    {
-      &C_icon_crossmark,
-      "Reject",
-    });
 
 UX_FLOW(ux_confirm_single_flow_asset_tag,
   &ux_confirm_single_flow_asset_tag_1_step,
   &ux_confirm_single_flow_asset_tag_2_step,
   &ux_confirm_single_flow_asset_tag_3_step,
   &ux_confirm_single_flow_asset_tag_4_step,
-  &ux_confirm_single_flow_asset_tag_5_step,
-  &ux_confirm_single_flow_asset_tag_6_step
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
 );
 //////////////////////////////////////////////////////////////////////
 
@@ -465,28 +469,12 @@ UX_STEP_NOCB(
       .title = "String",
       .text = vars.tmp.verifier_string,
     });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_verifier_3_step,
-    pb,
-    io_seproxyhal_touch_verify_ok(NULL),
-    {
-      &C_icon_validate_14,
-      "Accept",
-    });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_verifier_4_step,
-    pb,
-    io_seproxyhal_touch_verify_cancel(NULL),
-    {
-      &C_icon_crossmark,
-      "Reject",
-    });
 
 UX_FLOW(ux_confirm_single_flow_asset_verifier,
   &ux_confirm_single_flow_asset_verifier_1_step,
   &ux_confirm_single_flow_asset_verifier_2_step,
-  &ux_confirm_single_flow_asset_verifier_3_step,
-  &ux_confirm_single_flow_asset_verifier_4_step
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
 );
 
 //////////////////////////////////////////////////////////////////////
@@ -513,29 +501,13 @@ UX_STEP_NOCB(
       .title = "Frozen",
       .text = vars.tmp.reissuable,
     });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_freeze_4_step,
-    pb,
-    io_seproxyhal_touch_verify_ok(NULL),
-    {
-      &C_icon_validate_14,
-      "Accept",
-    });
-UX_STEP_CB(
-    ux_confirm_single_flow_asset_freeze_5_step,
-    pb,
-    io_seproxyhal_touch_verify_cancel(NULL),
-    {
-      &C_icon_crossmark,
-      "Reject",
-    });
 
 UX_FLOW(ux_confirm_single_flow_asset_freeze,
   &ux_confirm_single_flow_asset_freeze_1_step,
   &ux_confirm_single_flow_asset_freeze_2_step,
   &ux_confirm_single_flow_asset_freeze_3_step,
-  &ux_confirm_single_flow_asset_freeze_4_step,
-  &ux_confirm_single_flow_asset_freeze_5_step
+  &ux_confirm_single_flow_5_step,
+  &ux_confirm_single_flow_6_step
 );
 
 //////////////////////////////////////////////////////////////////////
@@ -1040,7 +1012,7 @@ uint8_t prepare_single_output() {
     unsigned short textSize;
     char tmp[80] = {0};
     signed char asset_ptr;
-    unsigned char type;
+    unsigned char type = 0;
     unsigned char one_in_sats[8] = {0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00};
     
     btchip_swap_bytes(amount, btchip_context_D.currentOutput + offset, 8);
@@ -1067,7 +1039,7 @@ uint8_t prepare_single_output() {
           } else {
             strncpy(vars.tmp.reissuable, "FALSE", 6);
           }
-          return 3;
+          return 2;
         } else if (type == 2) {
           offset += 4;
           str_len = (btchip_context_D.currentOutput + offset)[0];
@@ -1075,7 +1047,7 @@ uint8_t prepare_single_output() {
           strncpy(vars.tmp.verifier_string, btchip_context_D.currentOutput + offset, str_len);
           vars.tmp.verifier_string[str_len] = 0;
           offset += str_len;
-          return 4;
+          return 3;
         } else if (type == 3) {
           offset += 5;
           str_len = (btchip_context_D.currentOutput + offset)[0];
@@ -1088,7 +1060,7 @@ uint8_t prepare_single_output() {
           } else {
             strncpy(vars.tmp.reissuable, "FALSE", 6);
           }
-          return 5;
+          return 4;
         }
       }
     }
@@ -1118,6 +1090,7 @@ uint8_t prepare_single_output() {
       }
       else {
           btchip_swap_bytes(amount, btchip_context_D.currentOutput + offset + asset_ptr, 8);
+          asset_ptr += 8;
       }
     } else {
       str_len = strlen(G_coin_config->name_short);
@@ -1131,8 +1104,21 @@ uint8_t prepare_single_output() {
     textSize = btchip_convert_hex_amount_to_displayable(amount);
     vars.tmp.fullAmount[textSize + str_len + 1] = '\0';
 
-    if (asset_ptr > 0) {
-      return 2;
+    if (asset_ptr > 0 && type != 0x6F) {
+      if (type == 0x74 && (btchip_context_D.currentOutput + offset)[asset_ptr] != 0x75) {
+        //transfer asset
+        str_len = base58_encode(&(btchip_context_D.currentOutput + offset)[asset_ptr], 34, vars.tmp.ipfs, 70);
+        if (str_len > 0) {
+          vars.tmp.ipfs[str_len] = 0;
+        } else {
+          vars.tmp.ipfs[0] = 0;
+        }
+        return 5;
+      } else if (type == 0x72) {
+        //Reissue
+      } else if (type == 0x71) {
+        //New
+      }
     }
 
     return 1;
@@ -1255,15 +1241,16 @@ unsigned int btchip_bagl_confirm_single_output() {
 
     switch (ret_val) {
       case 2:
-        break;
-      case 3:
         ux_flow_init(0, ux_confirm_single_flow_asset_tag, NULL);
         break;
-      case 4:
+      case 3:
         ux_flow_init(0, ux_confirm_single_flow_asset_verifier, NULL);
         break;
-      case 5:
+      case 4:
         ux_flow_init(0, ux_confirm_single_flow_asset_freeze, NULL);
+        break;
+      case 5:
+        ux_flow_init(0, ux_confirm_single_flow_asset_message, NULL);
         break;
       default:
         ux_flow_init(0, ux_confirm_single_flow, NULL);

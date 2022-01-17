@@ -191,8 +191,11 @@ class BitcoinCommand(BitcoinBaseCommand):
         #                      scriptPubKey=bytes.fromhex('c014baaa408a4e5f2450fd58e056ccedc16274a0e0ff0e0c234c4943454e53455f54414701')))
         #tx.vout.append(CTxOut(nValue=0,
         #                      scriptPubKey=bytes.fromhex('c0500f0e424f4e4f5f5155414c4946494552')))
+        #tx.vout.append(CTxOut(nValue=0,
+        #                       scriptPubKey=bytes.fromhex('c050500c0a24424f4e4f5f4d41494e00')))
+
         tx.vout.append(CTxOut(nValue=0,
-                               scriptPubKey=bytes.fromhex('c050500c0a24424f4e4f5f4d41494e00')))
+                               scriptPubKey=script_pub_key+bytes.fromhex('c04172766e7412544553544153534554317e4d45535341474500e1f50500000000122012efd676f1c6d253b4387338c13da83d7a6f70f7cbc983860921abe862f5c2db75')))
 
         for i in range(len(tx.vin)):
             self.untrusted_hash_tx_input_start(tx=tx,
