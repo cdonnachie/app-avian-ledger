@@ -31,9 +31,6 @@
 #define MAGIC_TRUSTED_INPUT 0x32
 #define MAGIC_DEV_KEY 0x01
 
-#define ZCASH_USING_OVERWINTER 0x01
-#define ZCASH_USING_OVERWINTER_SAPLING 0x02
-
 enum btchip_modes_e {
     BTCHIP_MODE_ISSUER = 0x00,
     BTCHIP_MODE_SETUP_NEEDED = 0xff,
@@ -229,14 +226,6 @@ struct btchip_context_s {
     unsigned char outputParsingState;
     unsigned char totalOutputAmount[8];
     unsigned char changeOutputFound;
-
-    /* Overwinter */
-    unsigned char usingOverwinter;
-    unsigned char overwinterSignReady;
-    unsigned char nVersionGroupId[4];
-    unsigned char nExpiryHeight[4];
-    unsigned char nLockTime[4];
-    unsigned char sigHashType[4];
 
     /*Is swap mode*/
     unsigned char called_from_swap;
