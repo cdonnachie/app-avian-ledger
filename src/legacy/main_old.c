@@ -392,6 +392,102 @@ UX_FLOW(ux_confirm_single_flow,
   &ux_confirm_single_flow_5_step,
   &ux_confirm_single_flow_6_step
 );
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_tag_1_step,
+    pnn,
+    {
+      &C_icon_eye,
+      "Review Tag",
+      vars.tmp.feesAmount, // output #
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_tag_2_step,
+    bnnn_paging,
+    {
+      .title = "Asset",
+      .text = vars.tmp.fullAmount,
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_tag_3_step,
+    bnnn_paging,
+    {
+      .title = "Hash 160 Tagged",
+      .text = vars.tmp.h160,
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_tag_4_step,
+    bnnn_paging,
+    {
+      .title = "Flag",
+      .text = vars.tmp.reissuable,
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_tag_5_step,
+    pb,
+    io_seproxyhal_touch_verify_ok(NULL),
+    {
+      &C_icon_validate_14,
+      "Accept",
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_tag_6_step,
+    pb,
+    io_seproxyhal_touch_verify_cancel(NULL),
+    {
+      &C_icon_crossmark,
+      "Reject",
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_tag,
+  &ux_confirm_single_flow_asset_tag_1_step,
+  &ux_confirm_single_flow_asset_tag_2_step,
+  &ux_confirm_single_flow_asset_tag_3_step,
+  &ux_confirm_single_flow_asset_tag_4_step,
+  &ux_confirm_single_flow_asset_tag_5_step,
+  &ux_confirm_single_flow_asset_tag_6_step
+);
+//////////////////////////////////////////////////////////////////////
+
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_verifier_1_step,
+    pnn,
+    {
+      &C_icon_eye,
+      "Review Verifier",
+      vars.tmp.feesAmount, // output #
+    });
+UX_STEP_NOCB(
+    ux_confirm_single_flow_asset_verifier_2_step,
+    bnnn_paging,
+    {
+      .title = "String",
+      .text = vars.tmp.verifier_string,
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_verifier_3_step,
+    pb,
+    io_seproxyhal_touch_verify_ok(NULL),
+    {
+      &C_icon_validate_14,
+      "Accept",
+    });
+UX_STEP_CB(
+    ux_confirm_single_flow_asset_verifier_4_step,
+    pb,
+    io_seproxyhal_touch_verify_cancel(NULL),
+    {
+      &C_icon_crossmark,
+      "Reject",
+    });
+
+UX_FLOW(ux_confirm_single_flow_asset_verifier,
+  &ux_confirm_single_flow_asset_verifier_1_step,
+  &ux_confirm_single_flow_asset_verifier_2_step,
+  &ux_confirm_single_flow_asset_verifier_3_step,
+  &ux_confirm_single_flow_asset_verifier_4_step
+);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -844,27 +940,10 @@ error:
     return 0;
 }
 
-
-#define RAVENCOIN_NULL_ASSET_TAG 1
-#define RAVENCOIN_NULL_ASSET_VERIFIER 2
-#define RAVENCOIN_NULL_ASSET_RESTRICTED 3
-
 void get_address_from_output_script(unsigned char* script, int script_size, char* out, int out_size) {
     if (btchip_output_script_is_op_return(script)) {
         strcpy(out, "OP_RETURN");
         return;
-    }
-  
-    switch(btchip_output_script_try_get_ravencoin_asset_tag_type(script, script_size)) {
-        case RAVENCOIN_NULL_ASSET_TAG:
-            strcpy(out, "ASSET TAG");
-            return;
-        case RAVENCOIN_NULL_ASSET_VERIFIER:
-            strcpy(out, "ASSET VERIFIER");
-            return;
-        case RAVENCOIN_NULL_ASSET_RESTRICTED:
-            strcpy(out, "ASSET RESTRICTED");
-            return;
     }
 
     if (btchip_output_script_is_native_witness(script)) {
@@ -918,6 +997,42 @@ uint8_t prepare_single_output() {
     btchip_swap_bytes(amount, btchip_context_D.currentOutput + offset, 8);
     offset += 8;
 
+    if ((type = btchip_output_script_try_get_ravencoin_asset_tag_type(btchip_context_D.currentOutput + offset,  sizeof(btchip_context_D.currentOutput) - offset)) >= 1) {
+      if (type <= 3) {
+        // Switches? whats that
+        if (type == 1) {
+          for (int i = 0; i < 20; i++) {
+            snprintf(&vars.tmp.h160[i*2], 3, "%02X", (btchip_context_D.currentOutput + offset + 3)[i]);
+          }
+          vars.tmp.h160[40] = 0;
+          offset += 24;
+          // Checks done in try_get_asset_tag_type, no more than 32
+          str_len = (btchip_context_D.currentOutput + offset)[0];
+          offset += 1;
+          strncpy(vars.tmp.fullAmount, btchip_context_D.currentOutput + offset, str_len);
+          vars.tmp.fullAmount[str_len] = 0;
+          offset += str_len;
+          
+          if ((btchip_context_D.currentOutput + offset)[0]) {
+            strncpy(vars.tmp.reissuable, "TRUE", 5);
+          } else {
+            strncpy(vars.tmp.reissuable, "FALSE", 6);
+          }
+          return 3;
+        } else if (type == 2) {
+          offset += 4;
+          str_len = (btchip_context_D.currentOutput + offset)[0];
+          offset += 1;
+          strncpy(vars.tmp.verifier_string, btchip_context_D.currentOutput + offset, str_len);
+          vars.tmp.verifier_string[str_len] = 0;
+          offset += str_len;
+          return 4;
+        } else if (type == 3) {
+          return 5;
+        }
+      }
+    }
+
     get_address_from_output_script(btchip_context_D.currentOutput + offset,  sizeof(btchip_context_D.currentOutput) - offset, tmp, sizeof(tmp));
     strncpy(vars.tmp.fullAddress, tmp, sizeof(vars.tmp.fullAddress) - 1);
 
@@ -955,6 +1070,10 @@ uint8_t prepare_single_output() {
 
     textSize = btchip_convert_hex_amount_to_displayable(amount);
     vars.tmp.fullAmount[textSize + str_len + 1] = '\0';
+
+    if (asset_ptr > 0) {
+      return 2;
+    }
 
     return 1;
 }
@@ -1061,10 +1180,12 @@ unsigned int btchip_silent_confirm_single_output() {
 }
 
 unsigned int btchip_bagl_confirm_single_output() {
+    uint8_t ret_val;
+
     if (btchip_context_D.called_from_swap) {
         return btchip_silent_confirm_single_output();
     }
-    if (!prepare_single_output()) {
+    if (!(ret_val = prepare_single_output())) {
         return 0;
     }
 
@@ -1072,7 +1193,19 @@ unsigned int btchip_bagl_confirm_single_output() {
              btchip_context_D.totalOutputs - btchip_context_D.remainingOutputs +
                  1);
 
-    ux_flow_init(0, ux_confirm_single_flow, NULL);
+    switch (ret_val) {
+      case 2:
+        break;
+      case 3:
+        ux_flow_init(0, ux_confirm_single_flow_asset_tag, NULL);
+        break;
+      case 4:
+        ux_flow_init(0, ux_confirm_single_flow_asset_verifier, NULL);
+        break;
+      default:
+        ux_flow_init(0, ux_confirm_single_flow, NULL);
+        break;
+    }
     return 1;
 }
 

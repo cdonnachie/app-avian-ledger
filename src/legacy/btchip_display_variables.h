@@ -27,6 +27,14 @@ union display_variables {
         //Ravencoin: max asset length (32) + space (1) + max amt whole (11) + decimal (1) + max amt decimal (8) + \0 (1)
         char fullAmount[54];
         char feesAmount[20];  // fees
+        
+        //RVN
+        char ipfs[80];
+        char divisions[10]; //UNCHANGED
+        char reissuable[6];
+        char verifier_string[81];
+        char h160[41];
+
     } tmp;
 
     struct {

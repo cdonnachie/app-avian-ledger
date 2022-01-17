@@ -68,7 +68,6 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
             (buffer[1] != 0xC0)) {
         return -1;
     }
-    return -1;
     if (buffer[2] == 0x50) {
         if (buffer[3] == 0x50) {
             //Global restriction
@@ -78,13 +77,13 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
             return 3;
         }
         //Restricted string
-        if (buffer[3] > 32 || buffer[buffer[3] + 4] > 80) {
+        if (buffer[4] > 80) {
             return -2;
         }
         return 2;
     }
     //Tagging
-    if (buffer[2] != 0x14 || buffer[buffer[2] + 3] > 32 || buffer[buffer[buffer[2] + 3]] > 1) {
+    if (buffer[2] != 0x14 || buffer[buffer[2] + 4] > 32) {
         return -1;
     }
     return 1;
