@@ -21,6 +21,7 @@
 
 #include "os.h"
 #include "cx.h"
+#include "cx_stubs.h"
 #include "cx_ecfp.h"
 #include "ox_ec.h"
 
@@ -188,7 +189,8 @@ int bip32_CKDpub(const serialized_extended_pubkey_t *parent,
     return 0;
 }
 
-/** Missing in the SDK, we implement it using the cxram section. */
+#ifndef _NR_cx_hash_ripemd160
+/** Missing in some SDKs, we implement it using the cxram section if needed. */
 static size_t cx_hash_ripemd160(const uint8_t *in, size_t in_len, uint8_t *out, size_t out_len) {
     PRINT_STACK_POINTER();
 
@@ -201,6 +203,7 @@ static size_t cx_hash_ripemd160(const uint8_t *in, size_t in_len, uint8_t *out, 
     explicit_bzero((cx_ripemd160_t *) &G_cx, sizeof(cx_sha256_t));
     return CX_RIPEMD160_SIZE;
 }
+#endif  // _NR_cx_hash_ripemd160
 
 void crypto_ripemd160(const uint8_t *in, uint16_t inlen, uint8_t out[static 20]) {
     cx_hash_ripemd160(in, inlen, out, 20);
@@ -265,7 +268,7 @@ void crypto_get_checksum(const uint8_t *in, uint16_t in_len, uint8_t out[static 
     memmove(out, buffer, 4);
 }
 
-void crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
+bool crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
                                           uint8_t bip32_path_len,
                                           uint8_t pubkey[static 33],
                                           uint8_t chain_code[]) {
@@ -278,6 +281,7 @@ void crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
     cx_ecfp_private_key_t private_key = {0};
     cx_ecfp_public_key_t public_key;
 
+    bool result = true;
     BEGIN_TRY {
         TRY {
             keydata.prefix = 0x04;  // uncompressed public keys always start with 04
@@ -286,7 +290,6 @@ void crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
 
             if (chain_code != NULL) {
                 memmove(chain_code, keydata.chain_code, 32);
-                explicit_bzero(keydata.chain_code, 32);  // delete sensitive data
             }
 
             // generate corresponding public key
@@ -295,7 +298,12 @@ void crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
             memmove(keydata.raw_public_key, public_key.W + 1, 64);
 
             // compute compressed public key
-            crypto_get_compressed_pubkey((uint8_t *) &keydata, pubkey);
+            if (crypto_get_compressed_pubkey((uint8_t *) &keydata, pubkey) < 0) {
+                result = false;
+            }
+        }
+        CATCH_ALL {
+            result = false;
         }
         FINALLY {
             // delete sensitive data
@@ -304,6 +312,7 @@ void crypto_get_compressed_pubkey_at_path(const uint32_t bip32_path[],
         }
     }
     END_TRY;
+    return result;
 }
 
 uint32_t crypto_get_key_fingerprint(const uint8_t pub_key[static 33]) {

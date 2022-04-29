@@ -28,7 +28,7 @@ APP_PATH = ""
 
 APPVERSION_M = 2
 APPVERSION_N = 0
-APPVERSION_P = 0
+APPVERSION_P = 4
 APPVERSION   = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 
@@ -42,8 +42,6 @@ endif
 # Custom NanoS linking script to overlap legacy globals and new globals
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 SCRIPT_LD:=$(CURDIR)/script-nanos.ld
-else ifneq ($(TARGET_NAME),TARGET_NANOX)
-$(error Unknown target: $(TARGET_NAME))
 endif
 
 # Flags: BOLOS_SETTINGS, GLOBAL_PIN, DERIVE_MASTER
@@ -82,7 +80,6 @@ DEFINES   += COIN_COINID_SHORT=\"RVN\"
 DEFINES   += COIN_KIND=COIN_KIND_RAVENCOIN
 APPNAME ="Ravencoin"
 APP_LOAD_PARAMS += --path $(APP_PATH)
-
 else
 ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(error Unsupported COIN - use ravencoin_testnet, ravencoin)
@@ -92,11 +89,10 @@ endif
 APP_LOAD_PARAMS += $(APP_LOAD_FLAGS)
 DEFINES += $(DEFINES_LIB)
 
-
-ifeq ($(TARGET_NAME),TARGET_NANOX)
-ICONNAME=icons/nanox_app_$(COIN).gif
-else
+ifeq ($(TARGET_NAME),TARGET_NANOS)
 ICONNAME=icons/nanos_app_$(COIN).gif
+else
+ICONNAME=icons/nanox_app_$(COIN).gif
 endif
 
 all: default
@@ -120,23 +116,22 @@ DEFINES   += APPVERSION=\"$(APPVERSION)\"
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
 
 
-ifeq ($(TARGET_NAME),TARGET_NANOX)
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=72
+DEFINES       += HAVE_WALLET_ID_SDK
+else
 DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=300
-
-DEFINES       += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
-DEFINES       += HAVE_BLE_APDU # basic ledger apdu transport over BLE
-
 DEFINES       += HAVE_BAGL BAGL_WIDTH=128 BAGL_HEIGHT=64
 DEFINES       += HAVE_BAGL_ELLIPSIS # long label truncation feature
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
-else
-DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=72
-
-DEFINES       += HAVE_WALLET_ID_SDK
 endif
 
+ifeq ($(TARGET_NAME),TARGET_NANOX)
+DEFINES       += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
+DEFINES       += HAVE_BLE_APDU # basic ledger apdu transport over BLE
+endif
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
     # enables optimizations using the shared 1K CXRAM region
@@ -159,10 +154,10 @@ else
                 $(warning Using semihosted PRINTF. Only run with speculos!)
                 DEFINES   += HAVE_PRINTF HAVE_SEMIHOSTED_PRINTF PRINTF=semihosted_printf
         else
-                ifeq ($(TARGET_NAME),TARGET_NANOX)
-                        DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
-                else
+                ifeq ($(TARGET_NAME),TARGET_NANOS)
                         DEFINES   += HAVE_PRINTF PRINTF=screen_printf
+                else
+                        DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
                 endif
         endif
 endif
@@ -217,13 +212,11 @@ dep/%.d: %.c Makefile
 
 
 # Temporary restriction until we a Resistance Nano X icon
-ifeq ($(TARGET_NAME),TARGET_NANOX)
-
+ifeq ($(TARGET_NAME),TARGET_NANOS)
 listvariants:
 	@echo VARIANTS COIN ravencoin_testnet ravencoin
 
 else
-
 listvariants:
 	@echo VARIANTS COIN ravencoin_testnet ravencoin
 

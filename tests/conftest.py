@@ -1,137 +1,165 @@
-from dataclasses import dataclass
-
-import json
-
-from typing import Union
-
-from pathlib import Path
-
-import pytest
-
-from bitcoin_client.ledger_bitcoin import TransportClient, Client, Chain, createClient
-
-from speculos.client import SpeculosClient
-
-import os
-import re
-
 import random
+import binascii
+import hashlib
+from typing import Tuple
+
+from test_utils.fixtures import *
+from test_utils.authproxy import AuthServiceProxy, JSONRPCException
+from test_utils import segwit_addr
+
+import shutil
+import subprocess
+from time import sleep
+from decimal import Decimal
+
+import bitcoin_client.ledger_bitcoin._base58 as base58
+from bitcoin_client.ledger_bitcoin.common import sha256
 
 random.seed(0)  # make sure tests are repeatable
 
-# path with tests
-conftest_folder_path: Path = Path(__file__).parent
+# Make sure that the native client library is used with, as speculos would otherwise
+# return a version number < 2.0.0 for the app
+os.environ['SPECULOS_APPNAME'] = f'Bitcoin Test:{get_app_version()}'
 
 
-ASSIGNMENT_RE = re.compile(r'^\s*([a-zA-Z_][a-zA-Z_0-9]*)\s*=\s*(.*)$', re.MULTILINE)
+BITCOIN_DIRNAME = os.getenv("BITCOIN_DIRNAME", ".test_bitcoin")
 
 
-def get_app_version() -> str:
-    makefile_path = conftest_folder_path.parent / "Makefile"
-    if not makefile_path.is_file():
-        raise FileNotFoundError(f"Can't find file: '{makefile_path}'")
+rpc_url = "http://%s:%s@%s:%s" % (
+    os.getenv("BTC_RPC_USER", "user"),
+    os.getenv("BTC_RPC_PASSWORD", "passwd"),
+    os.getenv("BTC_RPC_HOST", "127.0.0.1"),
+    os.getenv("BTC_RPC_PORT", "18443")
+)
 
-    makefile: str = makefile_path.read_text()
-
-    assignments = {
-        identifier: value for identifier, value in ASSIGNMENT_RE.findall(makefile)
-    }
-
-    return f"{assignments['APPVERSION_M']}.{assignments['APPVERSION_N']}.{assignments['APPVERSION_P']}"
+utxos = list()
+btc_addr = ""
 
 
-def pytest_addoption(parser):
-    parser.addoption("--hid", action="store_true")
-    parser.addoption("--headless", action="store_true")
-    parser.addoption("--enableslowtests", action="store_true")
+def get_rpc() -> AuthServiceProxy:
+    return AuthServiceProxy(rpc_url)
 
 
-@pytest.fixture(scope="module")
-def sw_h_path():
-    # sw.h should be in src/boilerplate/sw.h
-    sw_h_path = conftest_folder_path.parent / "src" / "boilerplate" / "sw.h"
-
-    if not sw_h_path.is_file():
-        raise FileNotFoundError(f"Can't find sw.h: '{sw_h_path}'")
-
-    return sw_h_path
+def get_wallet_rpc(wallet_name: str) -> AuthServiceProxy:
+    return AuthServiceProxy(f"{rpc_url}/wallet/{wallet_name}")
 
 
-@pytest.fixture(scope="module")
-def app_version() -> str:
-    return get_app_version()
+def setup_node():
+    global btc_addr
 
-
-@pytest.fixture
-def hid(pytestconfig):
-    return pytestconfig.getoption("hid")
-
-
-@pytest.fixture
-def headless(pytestconfig):
-    return pytestconfig.getoption("headless")
-
-
-@pytest.fixture
-def enable_slow_tests(pytestconfig):
-    return pytestconfig.getoption("enableslowtests")
-
-
-@pytest.fixture
-def comm(request, hid, app_version: str) -> Union[TransportClient, SpeculosClient]:
-    if hid:
-        client = TransportClient("hid")
-    else:
-        # We set the app's name before running speculos in order to emulate the expected
-        # behavior of the SDK's GET_VERSION default APDU.
-        # The app name is 'Bitcoin' or 'Bitcoin Test' for mainnet/testnet respectively.
-        # We leave the speculos default 'app' to avoid relying on that value in tests.
-        os.environ['SPECULOS_APPNAME'] = f'app:{app_version}'
-        client = SpeculosClient(
-            str(conftest_folder_path.parent.joinpath("bin/app.elf")),
-            ['--sdk', '2.1']
-        )
-        client.start()
-
+    # Check bitcoind is running while generating the address
+    while True:
+        rpc = get_rpc()
         try:
-            automation_file = conftest_folder_path.joinpath(request.function.automation_file)
-        except AttributeError:
-            automation_file = None
+            print(rpc.createwallet(wallet_name="test_wallet", descriptors=True))
+            btc_addr = rpc.getnewaddress()
+            break
 
-        if automation_file:
-            rules = json.load(open(automation_file))
-            client.set_automation_rules(rules)
+        except ConnectionError as e:
+            sleep(1)
+        except JSONRPCException as e:
+            if "Loading wallet..." in str(e):
+                sleep(1)
 
-    yield client
-
-    client.stop()
-
-
-@pytest.fixture
-def is_speculos(comm: Union[TransportClient, SpeculosClient]) -> bool:
-    return isinstance(comm, SpeculosClient)
+    # Mine enough blocks so coinbases are mature and we have enough funds to run everything
+    rpc.generatetoaddress(105, btc_addr)
 
 
-@pytest.fixture
-def client(comm: Union[TransportClient, SpeculosClient]) -> Client:
-    return createClient(comm, chain=Chain.TEST, debug=True)
+@pytest.fixture(scope="session")
+def run_bitcoind():
+    # Run bitcoind in a separate folder
+    os.makedirs(BITCOIN_DIRNAME, exist_ok=True)
+
+    bitcoind = os.getenv("BITCOIND", "bitcoind")
+
+    shutil.copy(os.path.join(os.path.dirname(__file__), "bitcoin.conf"), BITCOIN_DIRNAME)
+    subprocess.Popen([bitcoind, f"--datadir={BITCOIN_DIRNAME}"])
+
+    # Make sure the node is ready, and generate some initial blocks
+    setup_node()
+
+    yield
+
+    rpc = get_rpc()
+    rpc.stop()
+
+    shutil.rmtree(BITCOIN_DIRNAME)
 
 
-@dataclass(frozen=True)
-class SpeculosGlobals:
-    seed = "glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin"
-    # TODO: those are for testnet; we could compute them for any network from the seed
-    master_extended_privkey = "xprvA1oScBuhBjyAXhwqT1bVroVHGwFWgjEThWzeAQEMzNUdWcfmJ1Wk7B3g6PL32xifvo6dkVpp3E5ysTvMk2HDj1ALK85iXAYKfvtFCHhUbBA"
-    master_extended_pubkey = "xpub6Eno1hSb27XTkC2JZ38WDwS1py616BxK4jvExndyYi1cPQzuqYpzeyN9wd9HgDBPTRdPpEBLcFpr2LChwR1gYjeHvJDTrVqCowJfWUwHvdQ"
-    master_key_fingerprint = 0xF5ACC2FD
-    master_compressed_pubkey = bytes.fromhex(
-        "0251ec84e33a3119486461a44240e906ff94bf40cf807b025b1ca43332b80dc9db"
-    )
-    wallet_registration_key = bytes.fromhex(
-        "7463d6d1a82f4647ead048c625ae0c27fe40b6d0d5f2d24104009ae9d3b7963c"
-    )
+@pytest.fixture(scope="session")
+def rpc(run_bitcoind):
+    return get_rpc()
 
 
-@pytest.fixture
-def speculos_globals() -> SpeculosGlobals:
-    return SpeculosGlobals()
+@pytest.fixture(scope="session")
+def rpc_test_wallet(run_bitcoind):
+    return get_wallet_rpc("test_wallet")
+
+
+def get_utxo():
+    rpc = get_rpc()
+    global utxos
+    if not utxos:
+        utxos = rpc.listunspent()
+
+    if len(utxos) == 0:
+        raise ValueError("There are no UTXOs.")
+
+    utxo = utxos.pop(0)
+    while utxo.get("amount") < Decimal("0.00002"):
+        utxo = utxos.pop(0)
+
+    return utxo
+
+
+def seed_to_wif(seed: bytes):
+    assert len(seed) == 32
+
+    double_sha256 = sha256(sha256(b"\x80" + seed))
+    return base58.encode(b"\x80" + seed + double_sha256[:4])
+
+
+wallet_count = 0
+
+
+def get_unique_wallet_name() -> str:
+    global wallet_count
+
+    result = f"mywallet-{wallet_count}"
+
+    wallet_count += 1
+
+    return result
+
+
+def create_new_wallet() -> Tuple[str, str]:
+    """Creates a new descriptor-enabled wallet in bitcoin-core. Each new wallet has an increasing counter as
+    part of it's name in order to avoid conflicts."""
+
+    wallet_name = get_unique_wallet_name()
+
+    # TODO: derive seed from wallet_count, and use it to create a descriptor wallet (how?)
+    #       this would help to have repeatable tests, generating always the same seeds
+
+    get_rpc().createwallet(wallet_name=wallet_name, descriptors=True)
+    wallet_rpc = get_wallet_rpc(wallet_name)
+
+    descriptor: str = next(filter(lambda d: d["desc"].startswith(
+        "pkh"), wallet_rpc.listdescriptors()["descriptors"]))["desc"]
+    core_xpub_orig = descriptor[descriptor.index("(")+1: descriptor.index("/0/*")]
+
+    return wallet_name, core_xpub_orig
+
+
+def generate_blocks(n):
+    return get_rpc().generatetoaddress(n, btc_addr)
+
+
+def testnet_to_regtest_addr(addr: str) -> str:
+    """Convenience function to reencode addresses from testnet format to regtest one (bech32 prefix is different)"""
+    hrp, data, spec = segwit_addr.bech32_decode(addr)
+    if hrp is None:
+        return addr  # bech32m decoding failed; either legacy/unknown address type, or invalid address
+    if (hrp != "tb"):
+        raise ValueError("Not a valid testnet bech32m string")
+    return segwit_addr.bech32_encode("bcrt", data, spec)

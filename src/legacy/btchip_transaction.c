@@ -207,8 +207,9 @@ void transaction_parse(unsigned char parseMode) {
                     transaction_offset_increase(4);
 
                     if (G_coin_config->flags & FLAG_PEERCOIN_SUPPORT) {
-                        if ((G_coin_config->family ==
-                            BTCHIP_FAMILY_PEERCOIN) ||
+                        if (((G_coin_config->family ==
+                            BTCHIP_FAMILY_PEERCOIN &&
+                            (btchip_context_D.transactionVersion[0] < 3))) ||
                             ((G_coin_config->family == BTCHIP_FAMILY_STEALTH) &&
                             (btchip_context_D.transactionVersion[0] < 2))) {
                             // Timestamp
@@ -222,7 +223,7 @@ void transaction_parse(unsigned char parseMode) {
                         .transactionRemainingInputsOutputs =
                         transaction_get_varint();
                     PRINTF("Number of inputs : " DEBUG_LONG "\n",btchip_context_D.transactionContext.transactionRemainingInputsOutputs);
-                    if (btchip_context_D.called_from_swap && parseMode == PARSE_MODE_SIGNATURE) {
+                    if (G_swap_state.called_from_swap && parseMode == PARSE_MODE_SIGNATURE) {
                         // remember number of inputs to know when to exit from library
                         // we will count number of already signed inputs and compare with this value
                         // As there are a lot of different states in which we can have different number of input

@@ -69,6 +69,10 @@ UX_FLOW(ux_menu_main_flow_altcoin,
         &ux_menu_exit_step,
         FLOW_LOOP);
 
+// TODO: Update for RVN
+#define BIP32_PUBKEY_VERSION_MAINNET 0x0488B21E
+#define BIP32_PUBKEY_VERSION_TESTNET 0x043587CF
+
 void ui_menu_main() {
     if (G_ux.stack_count == 0) {
         ux_stack_push();
@@ -79,7 +83,7 @@ void ui_menu_main() {
     } else if (G_coin_config->kind == COIN_KIND_RAVENCOIN_TESTNET) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin_testnet, NULL);
     } else {
-        ux_flow_init(0, ux_menu_main_flow_altcoin, NULL);
+        ux_flow_init(0, ux_menu_main_flow_altcoin, NULL);  // some altcoin
     }
 }
 
