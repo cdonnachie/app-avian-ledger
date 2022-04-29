@@ -3,10 +3,10 @@ import pytest
 from bitcoin_client.ledger_bitcoin import Client
 from bitcoin_client.ledger_bitcoin.exception.errors import DenyError
 
-from .utils import automation
+from test_utils import has_automation
 
 
-@automation("automations/sign_message_accept.json")
+@has_automation("automations/sign_message_accept.json")
 def test_sign_message(client: Client):
     msg = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks."
     path = "m/44'/1'/0'/0/0"
@@ -14,7 +14,7 @@ def test_sign_message(client: Client):
 
     assert result == "IE89CCEmDXX/45rXsXAPzN/iJGvBxiS2sGxF+KWRyF1IHppHF7/i0ZW4sWxvpvZJNH7An4ssLbu+NQ9kTd9XRJc="
 
-@automation("automations/sign_message_accept.json")
+@has_automation("automations/sign_message_accept.json")
 def test_sign_message_accept(client: Client):
     message = "Hello world!"
 
@@ -26,7 +26,7 @@ def test_sign_message_accept(client: Client):
     assert res == 'H1yyoNO0oKBIXcDq1eXbq5kJUs22xcNLiyidgakd3GmfeU58PLiVQA3mNfk2OMsBvUsJ4GflgkSejs8mVJ9fI+4='
 
 
-@automation("automations/sign_message_accept.json")
+@has_automation("automations/sign_message_accept.json")
 def test_sign_message_accept_long(client: Client):
     # Test with a long message that is split in multiple leaves in the Merkle tree
 
@@ -40,7 +40,7 @@ def test_sign_message_accept_long(client: Client):
     assert res == 'Hzc2vj4oA0LxFFBAhtQRwA/aUIpEWHCO51mt8oRl/hJgdd0ZN/wZe6QjBYXNJ4rYUbfl3EeSAseXy27V+Bag3lw='
 
 
-@automation("automations/sign_message_reject.json")
+@has_automation("automations/sign_message_reject.json")
 def test_sign_message_reject(client: Client):
     with pytest.raises(DenyError):
         client.sign_message("Anything", "m/44'/1'/0'/0/0")
