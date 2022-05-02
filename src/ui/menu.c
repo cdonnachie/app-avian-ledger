@@ -77,9 +77,9 @@ void ui_menu_main() {
         ux_stack_push();
     }
 
-    if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_MAINNET) {
+    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin, NULL);
-    } else if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_TESTNET) {
+    } else { // (G_coin_config->kind == COIN_KIND_RAVENCOIN_TESTNET) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin_testnet, NULL);
     } 
     /*
