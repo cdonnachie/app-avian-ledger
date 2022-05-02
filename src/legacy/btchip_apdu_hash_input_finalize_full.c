@@ -45,8 +45,7 @@ void btchip_apdu_hash_input_finalize_full_reset(void) {
 static bool check_output_displayable() {
     bool displayable = true, invalid = false;
     unsigned char amount[8], isOpReturn, isP2sh, isNativeSegwit, j,
-        nullAmount = 1;
-    unsigned char isOpCreate, isOpCall;
+        nullAmount = 1, asset_type = -1;
 
     signed char asset_ptr = -1, tag_type = -1;
 
@@ -75,36 +74,31 @@ static bool check_output_displayable() {
         );
     }
 
-    PRINTF("%d %d\n", asset_ptr, tag_type);
+    PRINTF("Asset PTR: %d TAG_TYPE: %d\n", asset_ptr, tag_type);
+
+    isNativeSegwit = btchip_output_script_is_native_witness(
+        btchip_context_D.currentOutput + 8);
 
     if (asset_ptr > 0) {
         isP2sh = btchip_output_script_is_p2sh_ravencoin_asset(btchip_context_D.currentOutput + 8);
+        asset_type = (btchip_context_D.currentOutput + 8)[asset_ptr + 1];
+        invalid = !btchip_output_script_is_regular_ravencoin_asset(btchip_context_D.currentOutput + 8) && 
+            !isP2sh && !(isOpReturn || tag_type > 0);
     }
     else {
         isP2sh = btchip_output_script_is_p2sh(btchip_context_D.currentOutput + 8);
-    }
-    
-    isNativeSegwit = btchip_output_script_is_native_witness(
-        btchip_context_D.currentOutput + 8);
-    isOpCreate =
-        btchip_output_script_is_op_create(btchip_context_D.currentOutput + 8,
-          sizeof(btchip_context_D.currentOutput) - 8);
-    isOpCall =
-        btchip_output_script_is_op_call(btchip_context_D.currentOutput + 8,
-          sizeof(btchip_context_D.currentOutput) - 8);
-
-    if (asset_ptr > 0) {
-        invalid = !btchip_output_script_is_regular_ravencoin_asset(btchip_context_D.currentOutput + 8);
-    } else {
         invalid = !btchip_output_script_is_regular(btchip_context_D.currentOutput + 8) &&
             !isP2sh && !(nullAmount && (isOpReturn || tag_type > 0));
     }
     
+
     if (invalid) {    
         PRINTF("Error : Unrecognized output script\n");
         THROW(EXCEPTION);
     }
-    if (btchip_context_D.tmpCtx.output.changeInitialized && !isOpReturn) {
+
+    // We want to mark 
+    if (btchip_context_D.tmpCtx.output.changeInitialized && !isOpReturn && tag_type < 1) {
         bool changeFound = false;
         unsigned char addressOffset =
             (isNativeSegwit ? OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET
@@ -134,12 +128,18 @@ static bool check_output_displayable() {
             }
         }
         if (changeFound) {
-            if (btchip_context_D.changeOutputFound) {
-                PRINTF("Error : Multiple change output found");
-                THROW(EXCEPTION);
+            // We don't care about asset change; this can happen a lot
+            if (asset_ptr > 0) {
+                if (btchip_context_D.changeOutputFound) {
+                    PRINTF("Error : Multiple change output found");
+                    THROW(EXCEPTION);
+                }
+                btchip_context_D.changeOutputFound = true;
             }
-            btchip_context_D.changeOutputFound = true;
-            displayable = false;
+            // We want to disp info for creations & reissues
+            if (asset_type != 0x6F && asset_type != 0x72 && asset_type != 0x71) {
+                displayable = false;
+            }
         }
     }
 
