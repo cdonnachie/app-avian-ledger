@@ -150,10 +150,12 @@ enum opcodetype {
 typedef enum {
     SCRIPT_TYPE_P2PKH = 0x00,
     SCRIPT_TYPE_P2SH = 0x01,
+    /* Not yet implemented
     SCRIPT_TYPE_P2WPKH = 0x02,
     SCRIPT_TYPE_P2WSH = 0x03,
     SCRIPT_TYPE_P2TR = 0x04,
     SCRIPT_TYPE_UNKNOWN_SEGWIT = 0xFF  // a valid but undefined segwit script
+    */
 } script_type_e;
 
 static inline bool is_p2wpkh(const uint8_t script[], size_t script_len) {

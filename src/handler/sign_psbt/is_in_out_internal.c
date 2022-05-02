@@ -32,6 +32,7 @@ int is_in_out_internal(dispatcher_context_t *dispatcher_context,
 
         PRINTF("Invalid script type\n");
         return -1;
+    /*
     } else if (script_type == SCRIPT_TYPE_UNKNOWN_SEGWIT) {
         // An unknown but valid segwit script type, definitely external.
         return 0;
@@ -47,6 +48,7 @@ int is_in_out_internal(dispatcher_context_t *dispatcher_context,
                                                               sizeof(key),
                                                               &fingerprint,
                                                               bip32_path);
+    */
     } else {
         // legacy or segwitv0 output, use PSBT_OUT_BIP32_DERIVATION
         uint8_t key[1 + 33];

@@ -13,16 +13,16 @@
 #endif
 
 int get_script_type(const uint8_t script[], size_t script_len) {
-    if (script_len == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 0x14 &&
+    if (/* script_len == 25 && */ script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 0x14 &&
         script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
         return SCRIPT_TYPE_P2PKH;
     }
 
-    if (script_len == 23 && script[0] == OP_HASH160 && script[1] == 0x14 &&
+    if (/* script_len == 23 && */ script[0] == OP_HASH160 && script[1] == 0x14 &&
         script[22] == OP_EQUAL) {
         return SCRIPT_TYPE_P2SH;
     }
-
+    /*
     if (script_len == 22 && script[0] == 0x00 && script[1] == 0x14) {
         return SCRIPT_TYPE_P2WPKH;
     }
@@ -34,7 +34,7 @@ int get_script_type(const uint8_t script[], size_t script_len) {
     if (script_len == 34 && script[0] == OP_1 && script[1] == 0x20) {
         return SCRIPT_TYPE_P2TR;
     }
-
+    
     // match if it is a potentially valid future segwit scriptPubKey as per BIP-0141
     if (script_len >= 4 && script_len <= 42 &&
         (script[0] == 0 || (script[0] >= OP_1 && script[0] <= OP_16))) {
@@ -43,6 +43,8 @@ int get_script_type(const uint8_t script[], size_t script_len) {
             return SCRIPT_TYPE_UNKNOWN_SEGWIT;
         }
     }
+
+    */
 
     // unknown/invalid, or doesn't have an address
     return -1;
@@ -70,6 +72,7 @@ int get_script_address(const uint8_t script[],
             }
             break;
         }
+        /*
         case SCRIPT_TYPE_P2WPKH:
         case SCRIPT_TYPE_P2WSH:
         case SCRIPT_TYPE_P2TR:
@@ -97,6 +100,7 @@ int get_script_address(const uint8_t script[],
             addr_len = strlen(out);
             break;
         }
+        */
         default:
             return -1;
     }

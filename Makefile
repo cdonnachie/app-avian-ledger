@@ -39,6 +39,8 @@ ifndef COIN
 COIN=ravencoin_testnet
 endif
 
+$(info Building for $(COIN))
+
 # Custom NanoS linking script to overlap legacy globals and new globals
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 SCRIPT_LD:=$(CURDIR)/script-nanos.ld
@@ -51,7 +53,7 @@ APP_LOAD_FLAGS=--appFlags 0xa50
 
 ifeq ($(COIN),ravencoin_testnet)
 # Ravencoin testnet
-DEFINES   += BIP32_PUBKEY_VERSION=0x00000000 # unused
+DEFINES   += BIP32_PUBKEY_VERSION=0x043587CF
 DEFINES   += BIP44_COIN_TYPE=1
 DEFINES   += BIP44_COIN_TYPE_2=1
 DEFINES   += COIN_P2PKH_VERSION=111
@@ -67,7 +69,7 @@ APP_LOAD_PARAMS += --path $(APP_PATH)
 
 else ifeq ($(COIN),ravencoin)
 # Ravencoin
-DEFINES   += BIP32_PUBKEY_VERSION=0x00000000 # unused
+DEFINES   += BIP32_PUBKEY_VERSION=0x0488B21E
 DEFINES   += BIP44_COIN_TYPE=175
 DEFINES   += BIP44_COIN_TYPE_2=175
 DEFINES   += COIN_P2PKH_VERSION=60
@@ -162,6 +164,7 @@ else
         endif
 endif
 
+undefine DISABLE_LEGACY_SUPPORT
 
 # Needed to be able to include the definition of G_cx
 INCLUDES_PATH += $(BOLOS_SDK)/lib_cxng/src

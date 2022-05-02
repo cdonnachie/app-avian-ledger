@@ -198,7 +198,7 @@ void app_main() {
             return;
         }
 
-#ifndef DISABLE_LEGACY_SUPPORT
+//#ifndef DISABLE_LEGACY_SUPPORT
         if (G_io_apdu_buffer[0] == CLA_APP_LEGACY) {
             if (G_app_mode != APP_MODE_LEGACY) {
                 explicit_bzero(&btchip_context_D, sizeof(btchip_context_D));
@@ -220,10 +220,12 @@ void app_main() {
             if (G_swap_state.called_from_swap && vars.swap_data.should_exit) {
                 os_sched_exit(0);
             }
+/*
         } else {
 #endif
             // if not Bitcoin or Bitcoin-testnet, we only support the legacy APDUS.
             // to be removed once the apps are split
+            // TODO: Is set false for RVN, update logic?
             if (G_coin_config->bip32_pubkey_version != 0x0488B21E &&
                 G_coin_config->bip32_pubkey_version != 0x043587CF) {
                 io_send_sw(SW_CLA_NOT_SUPPORTED);
@@ -278,6 +280,8 @@ void app_main() {
 #ifndef DISABLE_LEGACY_SUPPORT
         }
 #endif
+*/
+        }
     }
 }
 

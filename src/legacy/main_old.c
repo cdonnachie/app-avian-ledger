@@ -1089,7 +1089,7 @@ uint8_t prepare_single_output() {
 
     if ((type = btchip_output_script_try_get_ravencoin_asset_tag_type(btchip_context_D.currentOutput + offset,  sizeof(btchip_context_D.currentOutput) - offset)) >= 1) {
       if (type <= 3) {
-        // Switches? whats that
+        //TODO: Switches? whats that
         if (type == 1) {
           for (int i = 0; i < 20; i++) {
             snprintf(&vars.tmp.h160[i*2], 3, "%02X", (btchip_context_D.currentOutput + offset + 3)[i]);
@@ -1351,6 +1351,8 @@ unsigned int btchip_silent_confirm_single_output() {
 }
 
 unsigned int btchip_bagl_confirm_single_output() {
+    uint8_t ret_val;
+
     if (G_swap_state.called_from_swap) {
         return btchip_silent_confirm_single_output();
     }

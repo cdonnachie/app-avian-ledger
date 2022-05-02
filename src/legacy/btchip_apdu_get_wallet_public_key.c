@@ -58,7 +58,7 @@ unsigned short btchip_apdu_get_wallet_public_key() {
     bool require_user_approval = N_btchip.pubKeyRequestRestriction && !(display_request_token || display) && G_io_apdu_media == IO_APDU_MEDIA_U2F;
     bool segwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_SEGWIT);
     bool nativeSegwit = (G_io_apdu_buffer[ISO_OFFSET_P2] == P2_NATIVE_SEGWIT);
-    if (display && btchip_context_D.called_from_swap) {
+    if (display && G_swap_state.called_from_swap) {
         return BTCHIP_SW_INCORRECT_DATA;
     }
     switch (G_io_apdu_buffer[ISO_OFFSET_P1]) {
