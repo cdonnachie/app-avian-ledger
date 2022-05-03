@@ -39,6 +39,11 @@ ifndef COIN
 COIN=ravencoin_testnet
 endif
 
+# Custom NanoS linking script to overlap legacy globals and new globals
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+SCRIPT_LD:=$(CURDIR)/script-nanos.ld
+endif
+
 $(info Building for $(COIN))
 
 # Custom NanoS linking script to overlap legacy globals and new globals
@@ -53,6 +58,7 @@ APP_LOAD_FLAGS=--appFlags 0xa50
 
 ifeq ($(COIN),ravencoin_testnet)
 # Ravencoin testnet
+DEFINES_LIB=
 DEFINES   += BIP32_PUBKEY_VERSION=0x043587CF
 DEFINES   += BIP44_COIN_TYPE=1
 DEFINES   += BIP44_COIN_TYPE_2=1
@@ -69,6 +75,7 @@ APP_LOAD_PARAMS += --path $(APP_PATH)
 
 else ifeq ($(COIN),ravencoin)
 # Ravencoin
+DEFINES_LIB=
 DEFINES   += BIP32_PUBKEY_VERSION=0x0488B21E
 DEFINES   += BIP44_COIN_TYPE=175
 DEFINES   += BIP44_COIN_TYPE_2=175

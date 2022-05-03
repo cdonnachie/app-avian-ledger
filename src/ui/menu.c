@@ -77,16 +77,13 @@ void ui_menu_main() {
         ux_stack_push();
     }
 
-    if (G_coin_config->kind == COIN_KIND_RAVENCOIN) {
+    if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_MAINNET) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin, NULL);
-    } else { // (G_coin_config->kind == COIN_KIND_RAVENCOIN_TESTNET) {
+    } else if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_TESTNET) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin_testnet, NULL);
-    } 
-    /*
-    else {
+    } else {
         ux_flow_init(0, ux_menu_main_flow_altcoin, NULL);  // some altcoin
     }
-    */
 }
 
 UX_STEP_NOCB(ux_menu_info_step, bn, {"Ravencoin App", "(c) 2022 Ledger"});

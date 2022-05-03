@@ -81,7 +81,7 @@ static bool check_output_displayable() {
 
     if (asset_ptr > 0) {
         isP2sh = btchip_output_script_is_p2sh_ravencoin_asset(btchip_context_D.currentOutput + 8);
-        asset_type = (btchip_context_D.currentOutput + 8)[asset_ptr + 1];
+        asset_type = (btchip_context_D.currentOutput + 8)[asset_ptr];
         invalid = !btchip_output_script_is_regular_ravencoin_asset(btchip_context_D.currentOutput + 8) && 
             !isP2sh && !(isOpReturn || tag_type > 0);
     }
