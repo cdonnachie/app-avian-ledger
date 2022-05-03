@@ -82,11 +82,6 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
         if (buffer[3] == 0x50) {
             //Global restriction
             if (buffer[5] > 32) {
-                PRINTF("Greater than 32 bytes\n");
-                return -3;
-            }
-            if (6 + buffer[5] > size) {
-                PRINTF("Script not long enough\n");
                 return -3;
             }
             if (6 + buffer[5] > size) {
@@ -101,11 +96,6 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
         }
         //Restricted string
         if (buffer[4] > 80) {
-            PRINTF("Greater than 80 bytes\n");
-            return -2;
-        }
-        if (5 + buffer[4] > size) {
-            PRINTF("Script not long enough\n");
             return -2;
         }
         if (5 + buffer[4] > size) {
