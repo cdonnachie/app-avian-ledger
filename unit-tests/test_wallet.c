@@ -39,7 +39,7 @@ static void test_parse_policy_map_singlesig_1(void **state) {
     assert_int_equal(node_1->type, TOKEN_PKH);
     assert_int_equal(node_1->key_index, 0);
 }
-
+/*
 static void test_parse_policy_map_singlesig_2(void **state) {
     (void) state;
 
@@ -208,16 +208,18 @@ static void test_failures(void **state) {
     assert_true(0 > PARSE_POLICY("multi(1)", out, sizeof(out)));
     assert_true(0 > PARSE_POLICY("multi(1,)", out, sizeof(out)));
 }
-
+*/
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_parse_policy_map_singlesig_1),
+        /*
         cmocka_unit_test(test_parse_policy_map_singlesig_2),
         cmocka_unit_test(test_parse_policy_map_singlesig_3),
         cmocka_unit_test(test_parse_policy_map_multisig_1),
         cmocka_unit_test(test_parse_policy_map_multisig_2),
         cmocka_unit_test(test_parse_policy_map_multisig_3),
         cmocka_unit_test(test_failures),
+        */
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

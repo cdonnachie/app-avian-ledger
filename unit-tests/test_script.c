@@ -30,7 +30,7 @@ static void test_get_script_type_valid(void **state) {
                       0x07,       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,    0x0e,
                       0x0f,       0x10, 0x11, 0x12, 0x13, 0x14, OP_EQUAL};
     assert_int_equal(get_script_type(p2sh, sizeof(p2sh)), SCRIPT_TYPE_P2SH);
-
+    /*
     uint8_t p2wpkh[] = {OP_0, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
                         0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14};
     assert_int_equal(get_script_type(p2wpkh, sizeof(p2wpkh)), SCRIPT_TYPE_P2WPKH);
@@ -52,6 +52,7 @@ static void test_get_script_type_valid(void **state) {
                           0x0b,  0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
                           0x17,  0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20};
     assert_int_equal(get_script_type(unknown2, sizeof(unknown2)), SCRIPT_TYPE_UNKNOWN_SEGWIT);
+    */
 }
 
 static void test_get_script_type_invalid(void **state) {
@@ -72,7 +73,8 @@ static void test_get_script_type_invalid(void **state) {
                             0x05,   0x06,       0x07,           0x08,        0x09,  0x0a, 0x0b,
                             0x0c,   0x0d,       0x0e,           0x0f,        0x10,  0x11, 0x12,
                             0x13,   0x14,       OP_EQUALVERIFY, OP_CHECKSIG, OP_NOP};  // extra byte
-    assert_int_equal(get_script_type(p2pkh_long, sizeof(p2pkh_long)), -1);
+    //RVN can have more at end
+    //assert_int_equal(get_script_type(p2pkh_long, sizeof(p2pkh_long)), -1);
 
     uint8_t p2sh_short[] = {OP_HASH160, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                             0x07,       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
@@ -82,8 +84,10 @@ static void test_get_script_type_invalid(void **state) {
     uint8_t p2sh_long[] = {OP_HASH160, 0x14, 0x01, 0x02, 0x03,     0x04,  0x05, 0x06, 0x07,
                            0x08,       0x09, 0x0a, 0x0b, 0x0c,     0x0d,  0x0e, 0x0f, 0x10,
                            0x11,       0x12, 0x13, 0x14, OP_EQUAL, OP_NOP};  // extra byte
-    assert_int_equal(get_script_type(p2sh_long, sizeof(p2sh_long)), -1);
+    //RVN can have more at end 
+    //assert_int_equal(get_script_type(p2sh_long, sizeof(p2sh_long)), -1);
 
+    /*
     uint8_t p2wpkh_short[] = {
         OP_0, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
         0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13};  // one byte too short
@@ -126,6 +130,7 @@ static void test_get_script_type_invalid(void **state) {
                                  13,    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
                                  28,    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41};
     assert_int_equal(get_script_type(segwit_too_long, sizeof(segwit_too_long)), -1);
+    */
 }
 
 #define CHECK_VALID_TESTCASE(script, expected)                         \
