@@ -1032,7 +1032,7 @@ error:
 
 void get_address_from_output_script(unsigned char* script, int script_size, char* out, int out_size) {
     if (btchip_output_script_is_op_return(script)) {
-        strcpy(out, "OP_RETURN");
+        strncpy(out, "OP_RETURN", 10);
         return;
     }
 
@@ -1117,7 +1117,6 @@ uint8_t prepare_single_output() {
           // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
           strncpy(vars.tmp.verifier_string, (char *)btchip_context_D.currentOutput + offset, str_len);
           vars.tmp.verifier_string[str_len] = 0;
-          offset += str_len;
           return 3;
         } else if (type == 3) {
           offset += 5;
@@ -1422,7 +1421,7 @@ uint8_t set_key_path_to_display(unsigned char* keyPath) {
 
 void btchip_bagl_display_public_key(uint8_t is_derivation_path_unusual) {
     // append a white space at the end of the address to avoid glitch on nano S
-    strcat((char *)G_io_apdu_buffer + 200, " ");
+    strncat((char *)G_io_apdu_buffer + 200, " ", 2);
 
     ux_flow_init(0, is_derivation_path_unusual?ux_display_public_with_warning_flow:ux_display_public_flow, NULL);
 }

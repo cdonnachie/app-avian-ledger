@@ -119,7 +119,7 @@ int format_opscript_script(const uint8_t script[],
         return -1;
     }
 
-    strcpy(out, "OP_RETURN ");
+    strncpy(out, "OP_RETURN ", 11);
     int out_ctr = 10;
 
     uint8_t opcode = script[1];  // the push opcode
