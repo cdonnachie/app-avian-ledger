@@ -59,12 +59,17 @@ unsigned char btchip_output_script_is_p2sh_ravencoin_asset(unsigned char *buffer
     return 0;
 }
 
+static bool is_ascii(unsigned char c) {
+    return !(c >= INT8_MAX || c < 0x20);
+}
 
 //Check lengths etc.
 signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char *buffer, size_t size) {
+    int i;
     if (btchip_output_script_is_regular(buffer) ||
             btchip_output_script_is_p2sh(buffer) ||
             btchip_output_script_is_op_return(buffer) ||
+            size < 6 ||
             (buffer[1] != 0xC0)) {
         return -1;
     }
@@ -72,20 +77,55 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
         if (buffer[3] == 0x50) {
             //Global restriction
             if (buffer[5] > 32) {
+                PRINTF("Greater than 32 bytes\n");
                 return -3;
+            }
+            if (6 + buffer[5] > size) {
+                PRINTF("Script not long enough\n");
+                return -3;
+            }
+            for (i = 0; i < buffer[5]; i++) {
+                if(!is_ascii(buffer[6+i])) {
+                    PRINTF("Not valid ascii\n");
+                    return -3;
+                }
             }
             return 3;
         }
         //Restricted string
         if (buffer[4] > 80) {
+            PRINTF("Greater than 80 bytes\n");
             return -2;
         }
+        if (5 + buffer[4] > size) {
+            PRINTF("Script not long enough\n");
+            return -2;
+        }
+        for (i = 0; i < buffer[4]; i++) {
+            if(!is_ascii(buffer[5+i])) {
+                PRINTF("Not valid ascii\n");
+                return -2;
+            }
+        }
+
         return 2;
     }
     //Tagging
-    if (buffer[2] != 0x14 || buffer[buffer[2] + 4] > 32) {
+    if (buffer[2] != 0x14 || buffer[2] + 4 >= size || buffer[buffer[2] + 4] > 32) {
         return -1;
     }
+
+    if (buffer[2] + 5 + buffer[buffer[2] + 4] > size) {
+        return -1;
+    }
+
+    for (i = 0; i < buffer[buffer[2] + 4]; i++) {
+        if(!is_ascii(buffer[buffer[2] + 5 + i])) {
+            PRINTF("Not valid ascii\n");
+            return -1;
+        }
+    }
+
     return 1;
 }
 
@@ -99,9 +139,10 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
     // This method is also used in check_output_displayable and needs to ensure no overflows happen from bad scripts
     
     unsigned int script_ptr = 1; // Skip the first pushdata op
-    unsigned int final_op = buffer[0];
+    unsigned int final_op = buffer[0], i;
     signed char script_start;
     unsigned char script_type;
+    unsigned char name_length;
 
     if (final_op >= size || buffer[final_op] != 0x75) {
         return -1;
@@ -144,8 +185,22 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
         return -4;
     }
 
-    if (buffer[script_ptr] > 32 || increment_and_check_ptr(&script_ptr, 1 + buffer[script_ptr], size)) {
+    name_length = buffer[script_ptr];
+
+    if (name_length > 32) {
         return -5;
+    }
+
+    for (i = 0; i < name_length; i++) {
+        // Overbounds
+        if(!increment_and_check_ptr(&script_ptr, 1, size)) {
+            return -12;
+        }
+
+        // Not valid ASCII
+        if (!is_ascii(buffer[script_ptr])) {
+            return -13;
+        }
     }
 
     if (script_type != 0x6F) {
@@ -249,6 +304,7 @@ unsigned char btchip_output_script_is_native_witness(unsigned char *buffer) {
         }
     }
     */
+    UNUSED(buffer);
     return 0;
 }
 
