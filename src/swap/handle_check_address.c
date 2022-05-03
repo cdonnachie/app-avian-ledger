@@ -8,10 +8,6 @@
 #include "../common/segwit_addr.h"
 #include "../crypto.h"
 
-#ifndef DISABLE_LEGACY_SUPPORT
-#include "../legacy/cashaddr.h"
-#endif
-
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 // constants previously defined in btchip_apdu_get_wallet_public_key.h
@@ -20,10 +16,12 @@
 #define P1_REQUEST_TOKEN 0x02
 
 #define P2_LEGACY        0x00
+/*
 #define P2_SEGWIT        0x01
 #define P2_NATIVE_SEGWIT 0x02  // bech32
 #define P2_CASHADDR      0x03
 #define P2_TAPROOT       0x04  // bech32m
+*/
 
 bool get_address_from_compressed_public_key(unsigned char format,
                                             unsigned char* compressed_pub_key,
@@ -33,21 +31,10 @@ bool get_address_from_compressed_public_key(unsigned char format,
                                             char* address,
                                             unsigned char max_address_length) {
     int address_length;
-
-    // clang-format off
-#ifndef DISABLE_LEGACY_SUPPORT
-    bool cashAddr = (format == P2_CASHADDR);
-    if (cashAddr) {
-        uint8_t tmp[20];
-        crypto_hash160(compressed_pub_key,  // IN
-                       33,                  // INLEN
-                       tmp);
-        if (!cashaddr_encode(tmp, 20, (uint8_t*) address, max_address_length, CASHADDR_P2PKH))
-            return false;
-    } else
-#endif
+    
+    UNUSED(payToScriptHashVersion);
+    UNUSED(native_segwit_prefix);
     if (format == P2_LEGACY) {
-        // clang-format on
         uint8_t tmp[20];
         crypto_hash160(compressed_pub_key, 33, tmp);
         address_length =
@@ -56,7 +43,9 @@ bool get_address_from_compressed_public_key(unsigned char format,
             return false;
         }
         address[address_length] = 0;
-    } else {
+    } 
+    /*
+    else {
         uint8_t script[22];
         script[0] = 0x00;
         script[1] = 0x14;
@@ -96,6 +85,7 @@ bool get_address_from_compressed_public_key(unsigned char format,
             }
         }
     }
+    */
     return true;
 }
 

@@ -184,7 +184,7 @@ void app_main() {
         // Length of APDU command received in G_io_apdu_buffer
         int input_len = 0;
         // Structured APDU command
-        command_t cmd;
+        //command_t cmd;
 
         // Reset length of APDU response
         G_output_len = 0;

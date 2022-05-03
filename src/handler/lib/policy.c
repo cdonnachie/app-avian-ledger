@@ -48,6 +48,7 @@ typedef struct {
 } policy_parser_state_t;
 
 // comparator for pointers to compressed pubkeys
+/*
 static int cmp_compressed_pubkeys(const void *a, const void *b) {
     const uint8_t *key_a = (const uint8_t *) a;
     const uint8_t *key_b = (const uint8_t *) b;
@@ -59,7 +60,7 @@ static int cmp_compressed_pubkeys(const void *a, const void *b) {
     }
     return 0;
 }
-
+*/
 // p2pkh                     ==> legacy address (start with 1 on mainnet, m or n on testnet)
 // p2sh (also nested segwit) ==> legacy script  (start with 3 on mainnet, 2 on testnet)
 // p2wpkh or p2wsh           ==> bech32         (sart with bc1 on mainnet, tb1 on testnet)
@@ -136,6 +137,7 @@ static int get_derived_pubkey(policy_parser_state_t *state, int key_index, uint8
 /**
  * Pushes a node onto the stack. Returns 0 on success, -1 if the stack is exhausted.
  */
+/*
 static int state_stack_push(policy_parser_state_t *state, policy_node_t *policy_node) {
     ++state->node_stack_eos;
 
@@ -152,6 +154,7 @@ static int state_stack_push(policy_parser_state_t *state, policy_node_t *policy_
 
     return 0;
 }
+*/
 
 /**
  * Pops a node the stack. If the node is in HASH mode, computes the hash.
@@ -184,6 +187,7 @@ static void update_output(policy_parser_state_t *state, const uint8_t *data, siz
 static void update_output_u8(policy_parser_state_t *state, const uint8_t data) {
     update_output(state, &data, 1);
 }
+
 
 static int __attribute__((noinline)) process_pkh_wpkh_node(policy_parser_state_t *state) {
     PRINT_STACK_POINTER();
@@ -244,6 +248,7 @@ static int __attribute__((noinline)) process_pkh_wpkh_node(policy_parser_state_t
     return result;
 }
 
+/*
 static int __attribute__((noinline)) process_sh_wsh_node(policy_parser_state_t *state) {
     PRINT_STACK_POINTER();
 
@@ -405,6 +410,7 @@ static int __attribute__((noinline)) process_tr_node(policy_parser_state_t *stat
     }
     return result;
 }
+*/
 
 int call_get_wallet_script(dispatcher_context_t *dispatcher_context,
                            const policy_node_t *policy,
@@ -431,8 +437,10 @@ int call_get_wallet_script(dispatcher_context_t *dispatcher_context,
             case TOKEN_PKH:
             /* Not yet implemented in RVN
             case TOKEN_WPKH:
+            */
                 ret = process_pkh_wpkh_node(&state);
                 break;
+            /*
             case TOKEN_SH:
             case TOKEN_WSH:
                 ret = process_sh_wsh_node(&state);

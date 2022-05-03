@@ -1099,7 +1099,8 @@ uint8_t prepare_single_output() {
           // Checks done in try_get_asset_tag_type, no more than 32
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
-          strncpy(vars.tmp.fullAmount, btchip_context_D.currentOutput + offset, str_len);
+          // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
+          strncpy(vars.tmp.fullAmount, (char *)(btchip_context_D.currentOutput + offset), str_len);
           vars.tmp.fullAmount[str_len] = 0;
           offset += str_len;
           
@@ -1113,7 +1114,8 @@ uint8_t prepare_single_output() {
           offset += 4;
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
-          strncpy(vars.tmp.verifier_string, btchip_context_D.currentOutput + offset, str_len);
+          // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
+          strncpy(vars.tmp.verifier_string, (char *)btchip_context_D.currentOutput + offset, str_len);
           vars.tmp.verifier_string[str_len] = 0;
           offset += str_len;
           return 3;
@@ -1121,7 +1123,8 @@ uint8_t prepare_single_output() {
           offset += 5;
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
-          strncpy(vars.tmp.fullAmount, btchip_context_D.currentOutput + offset, str_len);
+          // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
+          strncpy(vars.tmp.fullAmount, (char *)btchip_context_D.currentOutput + offset, str_len);
           vars.tmp.fullAmount[str_len] = 0;
           offset += str_len;
           if ((btchip_context_D.currentOutput + offset)[0]) {
@@ -1147,7 +1150,8 @@ uint8_t prepare_single_output() {
     if (asset_ptr > 0) {
       type = (btchip_context_D.currentOutput + offset)[asset_ptr++];
       str_len = (btchip_context_D.currentOutput + offset)[asset_ptr++];
-      btchip_swap_bytes_reversed(vars.tmp.fullAmount, btchip_context_D.currentOutput + offset + asset_ptr, str_len);
+      // Asset is verified to be ascii (signed char) safe in btchip_output_script_get_ravencoin_asset_ptr
+      btchip_swap_bytes_reversed((unsigned char *)vars.tmp.fullAmount, btchip_context_D.currentOutput + offset + asset_ptr, str_len);
       asset_ptr += str_len;
       vars.tmp.fullAmount[str_len] = ' ';
       btchip_context_D.tmp =

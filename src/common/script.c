@@ -13,12 +13,12 @@
 #endif
 
 int get_script_type(const uint8_t script[], size_t script_len) {
-    if (/* script_len == 25 && */ script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 0x14 &&
+    if (script_len >= 25 &&  script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 0x14 &&
         script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
         return SCRIPT_TYPE_P2PKH;
     }
 
-    if (/* script_len == 23 && */ script[0] == OP_HASH160 && script[1] == 0x14 &&
+    if (script_len >= 23 && script[0] == OP_HASH160 && script[1] == 0x14 &&
         script[22] == OP_EQUAL) {
         return SCRIPT_TYPE_P2SH;
     }
