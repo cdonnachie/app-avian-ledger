@@ -5,5 +5,5 @@ bash ./clean_tests.sh
 
 cd ..
 make clean
-make -j DEBUG=0 COIN=bitcoin_testnet
-mv bin/ tests-legacy/bitcoin-testnet-bin
+make -j DEBUG=0 COIN=ravencoin_testnet
+mv bin/ tests-legacy/ravencoin-testnet-bin

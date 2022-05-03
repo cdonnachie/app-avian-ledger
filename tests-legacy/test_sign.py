@@ -65,6 +65,8 @@ def test_untrusted_hash_sign_fail_short_payload(cmd, transport):
     assert sw == 0x6700
 
 
+# RVN Does not support segwit, though this logic does not change from BTC
+'''
 @has_automation("automations/accept.json")
 def test_sign_p2wpkh_accept(cmd):
     for filepath in Path("data").rglob("p2wpkh/tx.json"):
@@ -87,3 +89,4 @@ def test_sign_p2pkh_accept(cmd):
 def test_sign_fail_p2pkh_reject(cmd):
     with pytest.raises(ConditionOfUseNotSatisfiedError):
         sign_from_json(cmd, "./data/one-to-one/p2pkh/tx.json")
+'''
