@@ -19,7 +19,7 @@ def test_get_wallet_address_singlesig_legacy(client: Client):
     assert client.get_wallet_address(wallet, None, 0,  0, False) == "mz5vLWdM1wHVGSmXUkhKVvZbJ2g4epMXSm"
     assert client.get_wallet_address(wallet, None, 1, 15, False) == "myFCUBRCKFjV7292HnZtiHqMzzHrApobpT"
 
-'''
+
 def test_get_wallet_address_singlesig_wit(client: Client):
     # bech32 address (P2WPKH)
     wallet = PolicyMapWallet(
@@ -194,4 +194,3 @@ def test_get_wallet_address_multisig_wit(client: Client):
 
     res = client.get_wallet_address(wallet, wallet_hmac, 0, 0, False)
     assert res == "tb1qmyauyzn08cduzdqweexgna2spwd0rndj55fsrkefry2cpuyt4cpsn2pg28"
-'''

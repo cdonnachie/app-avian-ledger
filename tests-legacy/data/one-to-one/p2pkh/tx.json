@@ -4,21 +4,16 @@
   "amount": 999800,
   "fees": 200,
   "to": "mhKsh7EzJo1gSU1vrpyejS1qsJAuKyaWWg",
-  "sign_paths": [
-    "m/44'/175'/0'/0/0"
-  ],
+  "sign_paths": ["m/84'/1'/0'/0/0"],
   "change_path": null,
   "lock_time": 1901594,
   "utxos": [
     {
       "txid": "13958e34f31f3afd87178ec383ace1a8a0579c2cb9754175553e82e6cdc22251",
       "raw": "02000000000101ec230e53095256052a2428270eec0498944b10f6f1c578f431c23d0098b4ae5a0100000017160014281539820e2de973ae41ba6004b431c921c4d86dfeffffff02727275000000000017a914c8b906af298c70e603a28c3efc2fae19e6ab280f8740420f00000000001976a914cbae5b50cf939e6f531b8a6b7abd788fe14b029788ac02473044022037ecb4248361aafd4f8c11e705f0fa7a5fbdcd595172fcd5643f3b11beff5d400220020c6d326f6c37d63cecadaf4eb335faedf7c44e05f5ef1d2b68140b023bd13d012103dac82fc0acfcfc36348d4a48a46f01cea77f2b9ece3f8c3b4c99d0b0b2f995d284f21c00",
-      "output_indexes": [
-        1
-      ],
-      "output_amounts": [
-        999800
-      ]
+      "output_indexes": [1],
+      "output_amounts": [999800]
     }
   ]
+
 }

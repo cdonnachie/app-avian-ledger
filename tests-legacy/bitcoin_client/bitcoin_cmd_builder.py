@@ -261,7 +261,7 @@ class BitcoinCommandBuilder:
         # P2:
         # - 0x80, new transaction
         # - 0x02, new transaction with segwit input
-        p2: int = 0x00 if is_new_transaction else 0x80
+        p2: int = 0x02 if is_new_transaction else 0x80
 
         cdata: bytes = (tx.nVersion.to_bytes(4, byteorder="little") +
                         ser_compact_size(len(inputs)))
@@ -348,28 +348,6 @@ class BitcoinCommandBuilder:
                                  p1=p1,
                                  p2=p2,
                                  cdata=ctxout.serialize())
-
-    def sign_message(self, message: bytes, bip32_path: str):
-        cdata = bytearray()
-
-        bip32_path: List[bytes] = bip32_path_from_string(bip32_path)
-
-        # split message in 64-byte chunks (last chunk can be smaller)
-        n_chunks = (len(message) + 63) // 64
-        chunks = [message[64 * i: 64 * i + 64] for i in range(n_chunks)]
-
-        cdata += len(bip32_path).to_bytes(1, byteorder="big")
-        cdata += b''.join(bip32_path)
-
-        cdata += write_varint(len(message))
-
-        cdata += MerkleTree(element_hash(c) for c in chunks).root
-
-        return self.serialize(
-            cla=self.CLA,
-            ins=BitcoinInsType.SIGN_MESSAGE,
-            cdata=bytes(cdata)
-        )
 
     def untrusted_hash_sign(self,
                             sign_path: str,
