@@ -81,7 +81,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
     if (buffer[2] == 0x50) {
         if (buffer[3] == 0x50) {
             //Global restriction
-            if (buffer[5] > 32) {
+            if (buffer[5] > 31 || buffer[5] < 3) {
                 return -3;
             }
             if (6 + buffer[5] > size) {
@@ -95,7 +95,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
             return 3;
         }
         //Restricted string
-        if (buffer[4] > 80) {
+        if (buffer[4] > 80 || buffer[4] == 0) {
             return -2;
         }
         if (5 + buffer[4] > size) {
@@ -109,7 +109,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
         return 2;
     }
     //Tagging
-    if (buffer[2] != 0x14 || buffer[2] + 4 >= size || buffer[buffer[2] + 4] > 32) {
+    if (buffer[2] != 0x14 || buffer[2] + 4 >= size || buffer[buffer[2] + 4] > 31 || buffer[buffer[2] + 4] < 3) {
         return -1;
     }
     if (buffer[2] + 5 + buffer[buffer[2] + 4] > size) {
@@ -126,8 +126,7 @@ signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char 
 //Verify the asset portion of an asset script
 signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size) {
     // This method is also used in check_output_displayable and needs to ensure no overflows happen from bad scripts
-    
-    unsigned int script_ptr = 1; // Skip the first pushdata op
+    unsigned int script_ptr = 1; // The script length is a varint; always less than 0xFC -> skip first
     unsigned int final_op = buffer[0], i;
     signed char script_start;
     unsigned char script_type, asset_len;
@@ -174,7 +173,7 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
     }
 
     asset_len = buffer[script_ptr];
-    if (asset_len > 32) {
+    if (asset_len > 31 || asset_len < 3) {
         return -5;
     }
 
@@ -184,6 +183,10 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
         }
         if (!is_ascii(buffer[script_ptr])) {
             return -13;
+        }
+        //Ownership assets must end in '!'
+        if (script_type == 0x6F && i == asset_len - 1 && buffer[script_ptr] != '!') {
+            return -15;
         }
     }
     if(increment_and_check_ptr(&script_ptr, 1, size)) {
@@ -221,11 +224,16 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
             }
         } else {
             //Transfer
+
+            // IPFS vout attachment
             if (buffer[script_ptr] != 0x75) {
                 if (increment_and_check_ptr(&script_ptr, 34, size)) {
                     return -7;
                 }
-                if (buffer[script_ptr] != 0x75) {
+            }
+            // IPFS timestamp
+            if (buffer[script_ptr] != 0x75) {
+                if (increment_and_check_ptr(&script_ptr, 4, size)) {
                     return -8;
                 }
             }

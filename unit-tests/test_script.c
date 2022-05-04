@@ -222,6 +222,393 @@ static void test_format_opscript_script_valid(void **state) {
     CHECK_VALID_TESTCASE(input22, "OP_RETURN -1");
 }
 
+//#include "legacy/include/btchip_helpers.h"
+
+/* TODO: 
+CMake was giving me some issues so I just did a copy-paste job
+*/
+
+static bool is_ascii(unsigned char c) {
+    return c < INT8_MAX && c >= 0x20;
+}
+
+static bool increment_and_check_ptr(unsigned int* ptr, int amt, size_t size) {
+    *ptr += amt;
+    return *ptr >= size || *ptr > INT8_MAX;
+}
+
+static signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char *buffer, size_t size) {
+    int i;
+    if (/*  These aren't the focus of these tests, we will always assume they are valid p2pkh, p2sh
+
+            btchip_output_script_is_regular(buffer) ||
+            btchip_output_script_is_p2sh(buffer) ||
+            btchip_output_script_is_op_return(buffer) || */
+            size < 6 ||
+            (buffer[1] != 0xC0)) {
+        return -1;
+    }
+    if (buffer[2] == 0x50) {
+        if (buffer[3] == 0x50) {
+            //Global restriction
+            if (buffer[5] > 31 || buffer[5] < 3) {
+                return -3;
+            }
+            if (6 + buffer[5] > size) {
+                return -3;
+            }
+            for (i = 0; i < buffer[5]; i++) {
+                if (!is_ascii(buffer[6+i])) {
+                    return -3;
+                }
+            }
+            return 3;
+        }
+        //Restricted string
+        if (buffer[4] > 80 || buffer[4] == 0) {
+            return -2;
+        }
+        if (5 + buffer[4] > size) {
+            return -2;
+        }
+        for (i = 0; i < buffer[4]; i++) {
+            if (!is_ascii(buffer[5+i])) {
+                return -2;
+            }
+        }
+        return 2;
+    }
+    //Tagging
+    if (buffer[2] != 0x14 || buffer[2] + 4 >= size || buffer[buffer[2] + 4] > 31 || buffer[buffer[2] + 4] < 3) {
+        return -1;
+    }
+    if (buffer[2] + 5 + buffer[buffer[2] + 4] > size) {
+        return -1;
+    }
+    for (i = 0; i < buffer[buffer[2] + 4]; i++) {
+        if (!is_ascii(buffer[buffer[2] + 5 + i])) {
+            return -1;
+        }
+    }
+    return 1;
+}
+
+static signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size) {
+    // This method is also used in check_output_displayable and needs to ensure no overflows happen from bad scripts
+    unsigned int script_ptr = 1; // The script length is a varint; always less than 0xFC -> skip first
+    unsigned int final_op = buffer[0], i;
+    signed char script_start;
+    unsigned char script_type, asset_len;
+
+    if (final_op >= size || buffer[final_op] != 0x75) {
+        return -1;
+    }
+
+    if (buffer[24] == 0xC0) {
+        script_ptr = 25;
+    } else if (buffer[26] == 0xC0) {
+        script_ptr = 27;
+    } else {
+        return -2;
+    }
+
+    if ((buffer[script_ptr+1] == 0x72) &&
+        (buffer[script_ptr+2] == 0x76) &&
+        (buffer[script_ptr+3] == 0x6E)) {
+        script_ptr += 4;
+    } else if ((buffer[script_ptr+2] == 0x72) &&
+        (buffer[script_ptr+3] == 0x76) &&
+        (buffer[script_ptr+4] == 0x6E)) {
+        script_ptr += 5;
+    } else {
+        return -3;
+    }
+    
+    script_start = script_ptr;
+    script_type = buffer[script_ptr];
+    if (
+        //Not any known script type
+        !(   
+            script_type == 0x71 ||
+            script_type == 0x6F ||
+            script_type == 0x72 ||
+            script_type == 0x74      
+        )
+        //Or out of bounds
+        ||
+        increment_and_check_ptr(&script_ptr, 1, size)
+    ) {
+        return -4;
+    }
+
+    asset_len = buffer[script_ptr];
+    if (asset_len > 31 || asset_len < 3) {
+        return -5;
+    }
+
+    for (i = 0; i < asset_len; i++) {
+        if(increment_and_check_ptr(&script_ptr, 1, size)) {
+            return -12;
+        }
+        if (!is_ascii(buffer[script_ptr])) {
+            return -13;
+        }
+        //Ownership assets must end in '!'
+        if (script_type == 0x6F && i == asset_len - 1 && buffer[script_ptr] != '!') {
+            return -15;
+        }
+    }
+    if(increment_and_check_ptr(&script_ptr, 1, size)) {
+        return -14;
+    }
+
+    if (script_type != 0x6F) {
+        if (increment_and_check_ptr(&script_ptr, 8, size)) {
+            return -6;
+        }
+        if (script_type != 0x74) {
+            //Divisibility & reissuability
+            if (increment_and_check_ptr(&script_ptr, 2, size)) {
+                return -9;
+            }
+            if (script_type == 0x72) {
+                if (buffer[script_ptr] != 0x75) {
+                    if (increment_and_check_ptr(&script_ptr, 34, size)) {
+                        return -10;
+                    }
+                    if (buffer[script_ptr] != 0x75) {
+                        return -11;
+                    }
+                }
+            } else {
+                if (buffer[script_ptr]) {
+                    if (increment_and_check_ptr(&script_ptr, 35, size)) {
+                        return -10;
+                    }
+                } else {
+                    if (increment_and_check_ptr(&script_ptr, 1, size)) {
+                        return -11;
+                    }
+                }
+            }
+        } else {
+            //Transfer
+
+            // IPFS vout attachment
+            if (buffer[script_ptr] != 0x75) {
+                if (increment_and_check_ptr(&script_ptr, 34, size)) {
+                    return -7;
+                }
+            }
+            // IPFS timestamp
+            if (buffer[script_ptr] != 0x75) {
+                if (increment_and_check_ptr(&script_ptr, 4, size)) {
+                    return -8;
+                }
+            }
+        }
+    }
+
+    //Must end with OP_DROP
+    if (buffer[script_ptr] != 0x75) {
+        return -9;
+    }
+
+    return script_start;
+}
+
+
+static void test_ravencoin_asset_script_valid(void **state) {
+    (void) state;
+    // Minimum asset len of 3                   V SCRIPT LENGTH
+    uint8_t p2pkh_asset_transfer_min_name[] = {44, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 0x10,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x03,
+                       0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_transfer_min_name, sizeof(p2pkh_asset_transfer_min_name)) > 0);
+
+    // Maximum asset len of 31
+    uint8_t p2pkh_asset_transfer_max_name[] = {72, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 44,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_transfer_max_name, sizeof(p2pkh_asset_transfer_max_name)) > 0);
+
+
+    uint8_t p2sh_asset_transfer_min_name[] = {42, OP_HASH160, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05,    0x06,
+                      0x07,       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,    0x0e,
+                      0x0f,       0x10, 0x11, 0x12, 0x13, 0x14, OP_EQUAL,
+                       OP_RVN_ASSET, 0x10,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x03,
+                       0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2sh_asset_transfer_min_name, sizeof(p2sh_asset_transfer_min_name)) > 0);
+
+
+    uint8_t p2sh_asset_transfer_max_name[] = {70, OP_HASH160, 0x14, 0x01, 0x02, 0x03, 0x04, 0x05,    0x06,
+                      0x07,       0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,    0x0e,
+                      0x0f,       0x10, 0x11, 0x12, 0x13, 0x14, OP_EQUAL,
+                       OP_RVN_ASSET, 44,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2sh_asset_transfer_max_name, sizeof(p2sh_asset_transfer_max_name)) > 0);
+    /* We calculate where 0xc0 is based on the script type. Once we confirm these ^ work we are good to go to just check the script types */
+
+    uint8_t p2pkh_asset_transfer_with_ipfs[] = {78, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 40,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x03,
+                       0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                       0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_transfer_with_ipfs, sizeof(p2pkh_asset_transfer_with_ipfs)) > 0);
+
+    uint8_t p2pkh_asset_transfer_with_ipfs_timestamp[] = {82, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 44,
+                       0x72, 0x76, 0x6E,
+                       0x74,
+                       0x03,
+                       0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                       0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                       0, 0, 0, 0,
+                       0x75};
+    
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_transfer_with_ipfs_timestamp, sizeof(p2pkh_asset_transfer_with_ipfs_timestamp)) > 0);
+
+    uint8_t p2pkh_asset_owner[] = {37, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 0x09,
+                       0x72, 0x76, 0x6E,
+                       0x6F,
+                       0x04,
+                       0x72, 0x72, 0x72, 0x21,
+                       0x75};
+
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_owner, sizeof(p2pkh_asset_owner)) > 0);
+
+    uint8_t p2pkh_asset_create[] = {109, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 47+34,
+                       0x72, 0x76, 0x6E,
+                       0x71,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0, 1, 1,
+                       0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                       0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                       0x75};
+
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_create, sizeof(p2pkh_asset_create)) > 0);
+
+    uint8_t p2pkh_asset_create_no_ipfs[] = {109-34, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 47,
+                       0x72, 0x76, 0x6E,
+                       0x71,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0, 1, 0,
+                       0x75};
+
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_create_no_ipfs, sizeof(p2pkh_asset_create_no_ipfs)) > 0);
+    
+
+    uint8_t p2pkh_asset_reissue_no_ipfs[] = {109-34-1, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 47,
+                       0x72, 0x76, 0x6E,
+                       0x72,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0xff, 1,
+                       0x75};
+
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_reissue_no_ipfs, sizeof(p2pkh_asset_reissue_no_ipfs)) > 0);
+
+    uint8_t p2pkh_asset_reissue[] = {109-1, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
+                       OP_RVN_ASSET, 47,
+                       0x72, 0x76, 0x6E,
+                       0x72,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                       0xff, 1,
+                       0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                       0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                       0x75};
+
+    assert_true(btchip_output_script_get_ravencoin_asset_ptr(p2pkh_asset_reissue_no_ipfs, sizeof(p2pkh_asset_reissue_no_ipfs)) > 0);
+
+    uint8_t null_tag[] = {56, OP_RVN_ASSET, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+                       0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
+                       0x10,   0x11,       0x12, 0x13, 0x14, 
+                       0x20,
+                       0x1F,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                       0
+                       };
+
+    assert_true(btchip_output_script_try_get_ravencoin_asset_tag_type(null_tag, sizeof(null_tag)) > 0);
+
+    uint8_t verifier_tag[] = {8, OP_RVN_ASSET, 0x50, 0x5, 0x4, 0x72, 0x72, 0x72, 0x72,};
+
+    assert_true(btchip_output_script_try_get_ravencoin_asset_tag_type(verifier_tag, sizeof(verifier_tag)) > 0);
+
+    uint8_t global_freeze[] = {OP_RVN_ASSET, 0x50, 0x50, 0x6, 0x4, 0x72, 0x72, 0x72, 0x72, 0}
+
+    assert_true(btchip_output_script_try_get_ravencoin_asset_tag_type(global_freeze, sizeof(global_freeze)) > 0);
+
+}   
+
 static void test_format_opscript_script_invalid(void **state) {
     (void) state;
 
@@ -261,6 +648,7 @@ int main() {
         cmocka_unit_test(test_get_script_type_invalid),
         cmocka_unit_test(test_format_opscript_script_valid),
         cmocka_unit_test(test_format_opscript_script_invalid),
+        cmocka_unit_test(test_ravencoin_asset_script_valid),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
