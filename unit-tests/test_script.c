@@ -603,7 +603,7 @@ static void test_ravencoin_asset_script_valid(void **state) {
 
     assert_true(btchip_output_script_try_get_ravencoin_asset_tag_type(verifier_tag, sizeof(verifier_tag)) > 0);
 
-    uint8_t global_freeze[] = {OP_RVN_ASSET, 0x50, 0x50, 0x6, 0x4, 0x72, 0x72, 0x72, 0x72, 0}
+    uint8_t global_freeze[] = {10, OP_RVN_ASSET, 0x50, 0x50, 0x6, 0x4, 0x72, 0x72, 0x72, 0x72, 0};
 
     assert_true(btchip_output_script_try_get_ravencoin_asset_tag_type(global_freeze, sizeof(global_freeze)) > 0);
 
