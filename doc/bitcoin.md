@@ -2,6 +2,8 @@ Bitcoin application : Technical Specifications
 
 <!-- TODO: List all the technical limitation for each command (max limits, etc.) -->
 
+### Note
+The ravencoin app only supports legacy APDUs
 
 ## Framework
 
