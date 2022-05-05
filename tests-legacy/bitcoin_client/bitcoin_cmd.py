@@ -75,7 +75,7 @@ class BitcoinCommand(BitcoinBaseCommand):
         sign_pub_keys: List[bytes] = []
         for sign_path in sign_paths:
             sign_pub_key, _, _ = self.get_public_key(
-                addr_type=AddrType.BECH32,
+                addr_type=AddrType.Legacy,  # AddrType.BECH32,
                 bip32_path=sign_path,
                 display=False
             )
@@ -122,7 +122,7 @@ class BitcoinCommand(BitcoinBaseCommand):
 
         if amount_available - fees > amount:
             change_pub_key, _, _ = self.get_public_key(
-                addr_type=AddrType.BECH32,
+                addr_type=AddrType.Legacy,  # AddrType.BECH32,
                 bip32_path=change_path,
                 display=False
             )
@@ -181,6 +181,108 @@ class BitcoinCommand(BitcoinBaseCommand):
 
         tx.vout.append(CTxOut(nValue=amount,
                               scriptPubKey=script_pub_key))
+
+        ''' TEST DISPLAY
+
+        # Transfer with max name length & amount len
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 44,
+                                  0x72, 0x76, 0x6E,
+                                  0x74,
+                                  0x1F,
+                                  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                                  0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
+                                  0xff, 0xff, 0x51, 0xac, 0xdf, 0xb2, 0x24, 0x1d,
+                                  0x75
+                              ])))
+
+        # Ownership asset
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 0x09,
+                                  0x72, 0x76, 0x6E,
+                                  0x6F,
+                                  0x04,
+                                  0x72, 0x72, 0x72, 0x21,
+                                  0x75
+                              ])))
+
+        # Asset creation w/ ipfs
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 47+34-31+10,
+                                  0x72, 0x76, 0x6E,
+                                  0x71,
+                                  10,
+                                  0x54, 0x45, 0x53, 0x54, 0x5F, 0x41, 0x53, 0x53, 0x45, 0x54,
+                                  0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                                  0, 1, 1,
+                                  0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                                  0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                                  0x75
+                              ])))
+
+        # Asset creation w/ no ipfs
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 47-31+10,
+                                  0x72, 0x76, 0x6E,
+                                  0x71,
+                                  11,
+                                  0x54, 0x45, 0x53, 0x54, 0x5F, 0x41, 0x53, 0x53, 0x45, 0x54, 0x32,
+                                  0x00, 0xE1, 0xF5, 0x05, 0x00, 0x00, 0x00, 0x00,
+                                  2, 0, 0,
+                                  0x75
+                              ])))
+
+        # Asset reissue w/ no ipfs
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 47,
+                                  0x72, 0x76, 0x6E,
+                                  0x72,
+                                  12,
+                                  0x52, 0x45, 0x49, 0x53, 0x53, 0x55, 0x45, 0x5F, 0x49, 0x50, 0x46, 0x53,
+                                  0x00, 0x0, 0, 0, 0, 0, 0, 0,
+                                  1, 1,
+                                  0x75
+                              ])))
+
+        # Asset reissue no change w/ ipfs
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=script_pub_key +
+                              bytes([
+                                  0xc0, 47,
+                                  0x72, 0x76, 0x6E,
+                                  0x72,
+                                  14,
+                                  0x52, 0x45, 0x49, 0x53, 0x53, 0x55, 0x45, 0x5F, 0x4E, 0x4F, 0x49, 0x50, 0x46, 0x53,
+                                  0x00, 0x0, 0, 0, 0, 0, 0, 0,
+                                  0xff, 0,
+                                  0x12, 0x20, 0x84, 0x43, 0xbc, 0xbb, 0x6a, 0x01, 0x18, 0xae, 0xbf, 0xcf, 0xe9, 0x1c, 0x12, 0x5d, 0x6e,
+                                  0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
+                                  0x75
+                              ])))
+
+        # Null tag script
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=bytes.fromhex('c014b98ce5280197c46eb0c8423534fe81cbdedf9aef110f2353595354454d2f2347414c41585901')))
+
+        # Null verifier script
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=bytes.fromhex('c050141328 51 55 41 4C 31 7C 51 55 41 4C 32 29 26 51 55 41 4C 33')))
+
+        # Null global freeze
+        tx.vout.append(CTxOut(nValue=0,
+                              scriptPubKey=bytes.fromhex('c050500c0a24424f4e4f5f4d41494e00')))
+
+        '''
 
         for i in range(len(tx.vin)):
             self.untrusted_hash_tx_input_start(tx=tx,
