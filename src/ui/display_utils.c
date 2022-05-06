@@ -52,8 +52,8 @@ void format_sats_amount(const char *coin_name,
                         uint64_t amount,
                         char out[static MAX_AMOUNT_LENGTH + 1]) {
     size_t coin_name_len = strlen(coin_name);
-    strncpy(out, coin_name, coin_name_len);
-    out[coin_name_len] = ' ';
+    strncpy(out, coin_name, MAX_AMOUNT_LENGTH);
+    out[MIN(coin_name_len, MAX_AMOUNT_LENGTH)] = ' ';
 
     char *amount_str = out + coin_name_len + 1;
 
