@@ -1,6 +1,13 @@
 {
     "files.associations": {
-        "*.h": "c"
+        "*.h": "c",
+        "*.tcc": "c",
+        "string_view": "c",
+        "algorithm": "c",
+        "random": "c",
+        "istream": "c",
+        "limits": "c",
+        "numeric": "c"
     },
     "C_Cpp.clang_format_path": "/usr/bin/clang-format",
     "editor.formatOnSave": true

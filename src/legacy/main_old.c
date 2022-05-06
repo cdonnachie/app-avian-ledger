@@ -1100,7 +1100,7 @@ uint8_t prepare_single_output() {
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
           // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
-          strncpy(vars.tmp.fullAmount, (char *)(btchip_context_D.currentOutput + offset), str_len);
+          strncpy(vars.tmp.fullAmount, (char *)(btchip_context_D.currentOutput + offset), MIN(str_len, 32));
           vars.tmp.fullAmount[str_len] = 0;
           offset += str_len;
           
@@ -1115,7 +1115,7 @@ uint8_t prepare_single_output() {
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
           // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
-          strncpy(vars.tmp.verifier_string, (char *)btchip_context_D.currentOutput + offset, str_len);
+          strncpy(vars.tmp.verifier_string, (char *)btchip_context_D.currentOutput + offset, MIN(str_len, 80));
           vars.tmp.verifier_string[str_len] = 0;
           return 3;
         } else if (type == 3) {
@@ -1123,7 +1123,7 @@ uint8_t prepare_single_output() {
           str_len = (btchip_context_D.currentOutput + offset)[0];
           offset += 1;
           // Validity of string checked in btchip_output_script_try_get_ravencoin_asset_tag_type
-          strncpy(vars.tmp.fullAmount, (char *)btchip_context_D.currentOutput + offset, str_len);
+          strncpy(vars.tmp.fullAmount, (char *)btchip_context_D.currentOutput + offset, MIN(str_len, 32));
           vars.tmp.fullAmount[str_len] = 0;
           offset += str_len;
           if ((btchip_context_D.currentOutput + offset)[0]) {
