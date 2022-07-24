@@ -46,8 +46,6 @@ unsigned char btchip_output_script_is_regular_ravencoin_asset(unsigned char *buf
 unsigned char btchip_output_script_is_p2sh_ravencoin_asset(unsigned char *buffer);
 signed char btchip_output_script_try_get_ravencoin_asset_tag_type(unsigned char *buffer, size_t size);
 signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, size_t size);
-void btchip_swap_bytes_reversed(unsigned char *target, unsigned char *source,
-                       unsigned char size);
 
 //END RVN
 

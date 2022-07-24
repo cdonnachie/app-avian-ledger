@@ -1150,7 +1150,7 @@ uint8_t prepare_single_output() {
       type = (btchip_context_D.currentOutput + offset)[asset_ptr++];
       str_len = (btchip_context_D.currentOutput + offset)[asset_ptr++];
       // Asset is verified to be ascii (signed char) safe in btchip_output_script_get_ravencoin_asset_ptr
-      btchip_swap_bytes_reversed((unsigned char *)vars.tmp.fullAmount, btchip_context_D.currentOutput + offset + asset_ptr, str_len);
+      memcpy((unsigned char *)vars.tmp.fullAmount, btchip_context_D.currentOutput + offset + asset_ptr, str_len);
       asset_ptr += str_len;
       vars.tmp.fullAmount[str_len] = ' ';
       btchip_context_D.tmp =

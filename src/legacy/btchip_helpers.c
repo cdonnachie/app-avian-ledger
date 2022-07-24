@@ -248,14 +248,6 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
     return script_start;
 }
 
-void btchip_swap_bytes_reversed(unsigned char *target, unsigned char *source,
-                                unsigned char size) {
-    unsigned char i;
-    for (i = 0; i < size; i++) {
-        target[i] = source[i];
-    }
-}
-
 //END RVN
 
 unsigned char btchip_output_script_is_regular(unsigned char *buffer) {

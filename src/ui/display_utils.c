@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "./display_utils.h"
+#include "os.h"
 
 // Division and modulus operators over uint64_t causes the inclusion of the __udivmoddi4 and other
 // library functions that occupy more than 400 bytes. Since performance is not critical and division
