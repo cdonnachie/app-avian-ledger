@@ -33,7 +33,6 @@ union display_variables {
         char divisions[11]; //UNCHANGED
         char reissuable[6];
         char verifier_string[81];
-        char h160[41];
 
     } tmp;
 

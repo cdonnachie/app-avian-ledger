@@ -496,8 +496,8 @@ UX_STEP_NOCB(
     ux_confirm_single_flow_asset_tag_3_step,
     bnnn_paging,
     {
-      .title = "Hash 160 Tagged",
-      .text = vars.tmp.h160,
+      .title = "Address Tagged",
+      .text = vars.tmp.fullAddress,
     });
 UX_STEP_NOCB(
     ux_confirm_single_flow_asset_tag_4_step,
@@ -1091,10 +1091,12 @@ uint8_t prepare_single_output() {
       if (type <= 3) {
         //TODO: Switches? whats that
         if (type == 1) {
-          for (int i = 0; i < 20; i++) {
-            snprintf(&vars.tmp.h160[i*2], 3, "%02X", (btchip_context_D.currentOutput + offset + 3)[i]);
-          }
-          vars.tmp.h160[40] = 0;
+          unsigned char address[22];
+          address[0] = G_coin_config->p2pkh_version;
+          os_memmove(&address[1], &btchip_context_D.currentOutput[offset + 3], 20);
+
+          textSize = btchip_public_key_to_encoded_base58(address, 21, (unsigned char *)vars.tmp.fullAddress, sizeof(vars.tmp.fullAddress) - 1, G_coin_config->p2pkh_version, 1);
+          vars.tmp.fullAddress[textSize] = 0;
           offset += 24;
           // Checks done in try_get_asset_tag_type, no more than 32
           str_len = (btchip_context_D.currentOutput + offset)[0];

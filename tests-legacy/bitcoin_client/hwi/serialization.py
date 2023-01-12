@@ -89,11 +89,36 @@ def deser_compact_size(f: Readable) -> int:
         nit = struct.unpack("<Q", f.read(8))[0]
     return nit
 
-
 def deser_string(f: Readable) -> bytes:
     nit = deser_compact_size(f)
     return f.read(nit)
 
+def deser_ops(b: bytes):
+    while len(b) > 0:
+        nit: int = struct.unpack("<B", b[:1])[0]
+        b = b[1:]
+        if nit == 0:
+            yield (nit, b'')
+        if nit == 0x4c:
+            nit = struct.unpack("<B", b[:1])[0]
+            b = b[1:]
+            data = b[:nit]
+            b = b[nit:]
+            yield (0x4c, data)
+        elif nit == 0x4d:
+            nit = struct.unpack("<H", b[:2])[0]
+            b = b[2:]
+            data = b[:nit]
+            b = b[nit:]
+            yield (0x4d, data)
+        elif nit == 0x4e:
+            nit = struct.unpack("<I", b[:4])[0]
+            b = b[4:]
+            data = b[:nit]
+            b = b[nit:]
+            yield (0x4e, data)
+        elif nit > 0x4e:
+            yield (nit, b'')
 
 def ser_string(s: bytes) -> bytes:
     return ser_compact_size(len(s)) + s

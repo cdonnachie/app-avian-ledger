@@ -233,7 +233,7 @@ signed char btchip_output_script_get_ravencoin_asset_ptr(unsigned char *buffer, 
             }
             // IPFS timestamp
             if (buffer[script_ptr] != 0x75) {
-                if (increment_and_check_ptr(&script_ptr, 4, size)) {
+                if (increment_and_check_ptr(&script_ptr, 8, size)) {
                     return -8;
                 }
             }

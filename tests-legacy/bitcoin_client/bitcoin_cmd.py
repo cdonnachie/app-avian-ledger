@@ -38,7 +38,9 @@ class BitcoinCommand(BitcoinBaseCommand):
                     change_path: str,
                     sign_paths: List[str],
                     raw_utxos: List[Tuple[bytes, int]],
-                    lock_time: int = 0) -> List[Tuple[bytes, bytes, Tuple[int, bytes]]]:
+                    lock_time: int = 0,
+                    *,
+                    override_transaction: bytes) -> List[Tuple[bytes, bytes, Tuple[int, bytes]]]:
         """Sign a new transaction with parameters..
 
         Parameters
@@ -75,7 +77,7 @@ class BitcoinCommand(BitcoinBaseCommand):
         sign_pub_keys: List[bytes] = []
         for sign_path in sign_paths:
             sign_pub_key, _, _ = self.get_public_key(
-                addr_type=AddrType.Legacy,  # AddrType.BECH32,
+                addr_type=AddrType.Legacy,
                 bip32_path=sign_path,
                 display=False
             )
@@ -189,7 +191,7 @@ class BitcoinCommand(BitcoinBaseCommand):
                               scriptPubKey=script_pub_key +
                               bytes([
                                   0xc0, 44,
-                                  0x72, 0x76, 0x6E,
+                                  0x72, 0x76, 0x6E, 
                                   0x74,
                                   0x1F,
                                   0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72, 0x72,
@@ -284,6 +286,12 @@ class BitcoinCommand(BitcoinBaseCommand):
 
         '''
 
+        if override_transaction:
+            tx = CTransaction.from_bytes(override_transaction)
+            for vin in tx.vin:
+                vin.scriptSig = b''
+
+        sigs: List[Tuple[bytes, bytes, Tuple[int, bytes]]] = []
         for i in range(len(tx.vin)):
             self.untrusted_hash_tx_input_start(tx=tx,
                                                inputs=inputs,
@@ -291,16 +299,9 @@ class BitcoinCommand(BitcoinBaseCommand):
                                                script=tx.vin[i].scriptSig,
                                                is_new_transaction=(i == 0))
 
-        self.untrusted_hash_tx_input_finalize(tx=tx,
+            self.untrusted_hash_tx_input_finalize(tx=tx,
                                               change_path=change_path)
 
-        sigs: List[Tuple[bytes, bytes, Tuple[int, bytes]]] = []
-        for i in range(len(tx.vin)):
-            self.untrusted_hash_tx_input_start(tx=tx,
-                                               inputs=[inputs[i]],
-                                               input_index=0,
-                                               script=tx.vin[i].scriptSig,
-                                               is_new_transaction=False)
             _, _, amount = utxos[i]
             sigs.append(
                 (bip143_digest(tx, amount, i),
@@ -309,7 +310,7 @@ class BitcoinCommand(BitcoinBaseCommand):
                                           lock_time=tx.nLockTime,
                                           sig_hash=1))
             )
-
+       
         return sigs
 
     def sign_tx(self,

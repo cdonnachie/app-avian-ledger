@@ -2,19 +2,43 @@
   "version": 1,
   "rules": [
     {
-      "regexp": "Review|Amount|Address|Confirm|Fees",
+      "regexp": "Review|Amount|Address|Confirm|Fees|Creation|Divisibility|Reissuable|IPFS|Reissuance|Asset|Flag|String|Message|Frozen",
       "actions": [
-        ["button", 2, true],
-        ["button", 2, false]
+        [
+          "button",
+          2,
+          true
+        ],
+        [
+          "button",
+          2,
+          false
+        ]
       ]
     },
     {
       "text": "Accept",
       "actions": [
-        [ "button", 1, true ],
-        [ "button", 2, true ],
-        [ "button", 2, false ],
-        [ "button", 1, false ]
+        [
+          "button",
+          1,
+          true
+        ],
+        [
+          "button",
+          2,
+          true
+        ],
+        [
+          "button",
+          2,
+          false
+        ],
+        [
+          "button",
+          1,
+          false
+        ]
       ]
     }
   ]
