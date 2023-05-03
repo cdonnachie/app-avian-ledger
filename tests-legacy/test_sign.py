@@ -107,20 +107,20 @@ def test_sign_fail_p2pkh_reject(cmd):
 
 @has_automation("automations/accept.json")
 def test_sign_avian_create(cmd):
-    sign_from_json(cmd, 'data/ravencoin/create/tx.json')
+    sign_from_json(cmd, 'data/avian/create/tx.json')
 
 @has_automation("automations/accept.json")
 def test_sign_avian_reissue(cmd):
-    sign_from_json(cmd, 'data/ravencoin/reissue/tx.json')
+    sign_from_json(cmd, 'data/avian/reissue/tx.json')
 
 @has_automation("automations/accept.json")
 def test_sign_avian_tag_qual(cmd):
-    sign_from_json(cmd, 'data/ravencoin/qualify_address/tx.json')
+    sign_from_json(cmd, 'data/avian/qualify_address/tx.json')
 
 @has_automation("automations/accept.json")
 def test_sign_avian_restricted(cmd):
-    sign_from_json(cmd, 'data/ravencoin/reissue_restricted/tx.json')
+    sign_from_json(cmd, 'data/avian/reissue_restricted/tx.json')
 
 @has_automation("automations/accept.json")
 def test_sign_avian_global_freeze(cmd):
-    sign_from_json(cmd, 'data/ravencoin/global_freeze/tx.json')
+    sign_from_json(cmd, 'data/avian/global_freeze/tx.json')

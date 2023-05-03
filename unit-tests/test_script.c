@@ -770,7 +770,7 @@ uint8_t p2pkh_asset_transfer_big_name[] = {73, OP_DUP, OP_HASH160, 0x14, 0x01, 0
 
     assert_true(btchip_output_script_get_avian_asset_ptr(p2pkh_asset_reissue_no_ipfs_extra_byte, sizeof(p2pkh_asset_reissue_no_ipfs_extra_byte)) < 0);
 
-    uint8_t p2pkh_asset_reissue_but_not_rvn[] = {109-1, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
+    uint8_t p2pkh_asset_reissue_but_not_avn[] = {109-1, OP_DUP, OP_HASH160, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
                        0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
                        0x10,   0x11,       0x12, 0x13, 0x14, OP_EQUALVERIFY, OP_CHECKSIG,
                        OP_AVN_ASSET, 47,
@@ -785,7 +785,7 @@ uint8_t p2pkh_asset_transfer_big_name[] = {73, OP_DUP, OP_HASH160, 0x14, 0x01, 0
                        0x58, 0xa8, 0x76, 0x93, 0xb7, 0x3d, 0x08, 0xf7, 0x7d, 0x77, 0xf6, 0xe7, 0x8f, 0xa2, 0x29, 0x56, 0x3c,
                        0x75};
 
-    assert_true(btchip_output_script_get_avian_asset_ptr(p2pkh_asset_reissue_but_not_rvn, sizeof(p2pkh_asset_reissue_but_not_rvn)) < 0);
+    assert_true(btchip_output_script_get_avian_asset_ptr(p2pkh_asset_reissue_but_not_avn, sizeof(p2pkh_asset_reissue_but_not_avn)) < 0);
 
     uint8_t null_tag_large_name[] = {57, OP_AVN_ASSET, 0x14, 0x01, 0x02, 0x03,           0x04,       0x05, 0x06,
                        0x07,   0x08,       0x09, 0x0a, 0x0b, 0x0c,           0x0d,       0x0e, 0x0f,
