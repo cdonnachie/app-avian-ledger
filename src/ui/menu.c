@@ -23,10 +23,10 @@
 
 // We have a screen with the icon and "Bitcoin is ready" for Bitcoin,
 // "Bitcoin Testnet is ready" for Bitcoin Testnet, "Application is ready" for all the altcoins
-UX_STEP_NOCB(ux_menu_ready_step_ravencoin, pnn, {&C_icon_ravencoin, "Ravencoin", "is ready"});
-UX_STEP_NOCB(ux_menu_ready_step_ravencoin_testnet,
+UX_STEP_NOCB(ux_menu_ready_step_ravencoin, pnn, {&C_icon_ravencoin, "Avian", "is ready"});
+UX_STEP_NOCB(ux_menu_ready_step_avian_testnet,
              pnn,
-             {&C_icon_ravencoin, "RVN Testnet", "is ready"});
+             {&C_icon_ravencoin, "AVN Testnet", "is ready"});
 UX_STEP_NOCB(ux_menu_ready_step_altcoin, nn, {"Application", "is ready"});
 
 UX_STEP_NOCB(ux_menu_version_step, bn, {"Version", APPVERSION});
@@ -50,8 +50,8 @@ UX_FLOW(ux_menu_main_flow_ravencoin,
 // #2 screen: version of the app
 // #3 screen: about submenu
 // #4 screen: quit
-UX_FLOW(ux_menu_main_flow_ravencoin_testnet,
-        &ux_menu_ready_step_ravencoin_testnet,
+UX_FLOW(ux_menu_main_flow_avian_testnet,
+        &ux_menu_ready_step_avian_testnet,
         &ux_menu_version_step,
         &ux_menu_about_step,
         &ux_menu_exit_step,
@@ -80,13 +80,13 @@ void ui_menu_main() {
     if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_MAINNET) {
         ux_flow_init(0, ux_menu_main_flow_ravencoin, NULL);
     } else if (G_coin_config->bip32_pubkey_version == BIP32_PUBKEY_VERSION_TESTNET) {
-        ux_flow_init(0, ux_menu_main_flow_ravencoin_testnet, NULL);
+        ux_flow_init(0, ux_menu_main_flow_avian_testnet, NULL);
     } else {
         ux_flow_init(0, ux_menu_main_flow_altcoin, NULL);  // some altcoin
     }
 }
 
-UX_STEP_NOCB(ux_menu_info_step, bn, {"Ravencoin App", "(c) 2022 Ledger"});
+UX_STEP_NOCB(ux_menu_info_step, bn, {"Avian App", "(c) 2022 Ledger"});
 UX_STEP_CB(ux_menu_back_step, pb, ui_menu_main(), {&C_icon_back, "Back"});
 
 // FLOW for the about submenu:

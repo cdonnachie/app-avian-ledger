@@ -86,10 +86,11 @@ unsigned short btchip_apdu_hash_sign() {
             if (((N_btchip.bkp.config.options &
                   BTCHIP_OPTION_FREE_SIGHASHTYPE) == 0)) {
                 
-                if (sighashType != SIGHASH_ALL) {
+                if (sighashType != SIGHASH_ALL | SIGHASH_FORKID) {
                     sw = BTCHIP_SW_INCORRECT_DATA;
                     goto discardTransaction;
                 }
+                sighashType |= (G_coin_config->forkid << 8);
             }
 
             // Finalize the hash

@@ -3,7 +3,8 @@ Bitcoin application : Technical Specifications
 <!-- TODO: List all the technical limitation for each command (max limits, etc.) -->
 
 ### Note
-The ravencoin app currently only supports legacy APDUs
+
+The avian app currently only supports legacy APDUs
 
 ## Framework
 
@@ -13,25 +14,25 @@ The messaging format of the app is compatible with the [APDU protocol](https://d
 
 The main commands use `CLA = 0xE1`, unlike the legacy Bitcoin application that used `CLA = 0xE0`.
 
-| CLA | INS | COMMAND NAME        | DESCRIPTION |
-|-----|-----|---------------------|-------------|
-|  E1 |  00 | GET_EXTENDED_PUBKEY | Return (and optionally show on screen) extended pubkey |
-|  E1 |  02 | REGISTER_WALLET     | Registers a wallet on the device (with user's approval) |
-|  E1 |  03 | GET_WALLET_ADDRESS  | Return and show on screen an address for a registered or default wallet |
-|  E1 |  04 | SIGN_PSBT           | Signs a PSBT with a registered or default wallet |
-|  E1 |  10 | SIGN_MESSAGE        | Sign a message with a key from a BIP32 path (Bitcoin Message Signing) |
+| CLA | INS | COMMAND NAME        | DESCRIPTION                                                             |
+| --- | --- | ------------------- | ----------------------------------------------------------------------- |
+| E1  | 00  | GET_EXTENDED_PUBKEY | Return (and optionally show on screen) extended pubkey                  |
+| E1  | 02  | REGISTER_WALLET     | Registers a wallet on the device (with user's approval)                 |
+| E1  | 03  | GET_WALLET_ADDRESS  | Return and show on screen an address for a registered or default wallet |
+| E1  | 04  | SIGN_PSBT           | Signs a PSBT with a registered or default wallet                        |
+| E1  | 10  | SIGN_MESSAGE        | Sign a message with a key from a BIP32 path (Bitcoin Message Signing)   |
 
 The `CLA = 0xF8` is used for framework-specific (rather than app-specific) APDUs; at this time, only one command is present.
 
-| CLA | INS | COMMAND NAME | DESCRIPTION |
-|-----|-----|--------------|-------------|
-|  F8 |  01 | CONTINUE     | Respond to an interruption and continue processing a command |
+| CLA | INS | COMMAND NAME | DESCRIPTION                                                  |
+| --- | --- | ------------ | ------------------------------------------------------------ |
+| F8  | 01  | CONTINUE     | Respond to an interruption and continue processing a command |
 
 The `CONTINUE` command is sent as a response to a client command from the Hardware Wallet; the format and content on the response depends on the client command, and is documented below for each client command.
 
 ### Interactive commands
 
-Several commands are executed via an interactive protocol that requires multiple rounds. At any time after receiving the command and before returning the commands final response (which is status word `0x9000` in case of success), the Hardware Wallet can respond with a special status word `SW_INTERRUPTED_EXECUTION` (`0xE000`), containing a request for the client in the response data. The first byte of the response is the *client command code*, identified what kind of request the Hardware Wallet is asking the client to perform. The client *must* comply with the request and send a special *CONTINUE* command `CLA = 0xF8` and `INS = 0x01`, with the appropriate response.
+Several commands are executed via an interactive protocol that requires multiple rounds. At any time after receiving the command and before returning the commands final response (which is status word `0x9000` in case of success), the Hardware Wallet can respond with a special status word `SW_INTERRUPTED_EXECUTION` (`0xE000`), containing a request for the client in the response data. The first byte of the response is the _client command code_, identified what kind of request the Hardware Wallet is asking the client to perform. The client _must_ comply with the request and send a special _CONTINUE_ command `CLA = 0xF8` and `INS = 0x01`, with the appropriate response.
 
 The specs for the client commands are detailed below.
 
@@ -52,18 +53,18 @@ Once the user approves, the `REGISTER_WALLET` returns to the client a 32-byte HM
 
 ## Status Words
 
-| SW     | SW name                      | Description |
-|--------|------------------------------|-------------|
-| 0x6985 | `SW_DENY`                    | Rejected by user |
-| 0x6A86 | `SW_WRONG_P1P2`              | Either `P1` or `P2` is incorrect |
-| 0x6A87 | `SW_WRONG_DATA_LENGTH`       | `Lc` or minimum APDU length is incorrect |
-| 0x6D00 | `SW_INS_NOT_SUPPORTED`       | No command exists with `INS` |
-| 0x6E00 | `SW_CLA_NOT_SUPPORTED`       | Bad `CLA` used for this application |
-| 0xB000 | `SW_WRONG_RESPONSE_LENGTH`   | Wrong response length (buffer size problem) |
-| 0xB007 | `SW_BAD_STATE`               | Abrted because unexpected state reached |
-| 0xB008 | `SW_SIGNATURE_FAIL`          | Invalid signature or HMAC |
-| 0xE000 | `SW_INTERRUPTED_EXECUTION`   | The command is interrupted, and requires the client's response |
-| 0x9000 | `SW_OK`                      | Success |
+| SW     | SW name                    | Description                                                    |
+| ------ | -------------------------- | -------------------------------------------------------------- |
+| 0x6985 | `SW_DENY`                  | Rejected by user                                               |
+| 0x6A86 | `SW_WRONG_P1P2`            | Either `P1` or `P2` is incorrect                               |
+| 0x6A87 | `SW_WRONG_DATA_LENGTH`     | `Lc` or minimum APDU length is incorrect                       |
+| 0x6D00 | `SW_INS_NOT_SUPPORTED`     | No command exists with `INS`                                   |
+| 0x6E00 | `SW_CLA_NOT_SUPPORTED`     | Bad `CLA` used for this application                            |
+| 0xB000 | `SW_WRONG_RESPONSE_LENGTH` | Wrong response length (buffer size problem)                    |
+| 0xB007 | `SW_BAD_STATE`             | Abrted because unexpected state reached                        |
+| 0xB008 | `SW_SIGNATURE_FAIL`        | Invalid signature or HMAC                                      |
+| 0xE000 | `SW_INTERRUPTED_EXECUTION` | The command is interrupted, and requires the client's response |
+| 0x9000 | `SW_OK`                    | Success                                                        |
 
 <!-- TODO: add an introduction section explaining the comand reference notations (e.g. the Bitcoin style varint) -->
 
@@ -77,25 +78,25 @@ Returns an extended public key at the given derivation path, serialized as per B
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 00    |
 
 **Input data**
 
-| Length | Name              | Description |
-|--------|-------------------|-------------|
-| `1`    | `display`         | `0` or `1`  |
+| Length | Name              | Description                            |
+| ------ | ----------------- | -------------------------------------- |
+| `1`    | `display`         | `0` or `1`                             |
 | `1`    | `n`               | Number of derivation steps (maximum 6) |
-| `4`    | `bip32_path[0]`   | First derivation step (big endian) |
-| `4`    | `bip32_path[1]`   | Second derivation step (big endian) |
-|        | ...               |             |
-| `4`    | `bip32_path[n-1]` | `n`-th derivation step (big endian) |
+| `4`    | `bip32_path[0]`   | First derivation step (big endian)     |
+| `4`    | `bip32_path[1]`   | Second derivation step (big endian)    |
+|        | ...               |                                        |
+| `4`    | `bip32_path[n-1]` | `n`-th derivation step (big endian)    |
 
 **Output data**
 
-| Length | Description |
-|--------|-------------|
+| Length       | Description                                           |
+| ------------ | ----------------------------------------------------- |
 | `<variable>` | The full serialized extended public key as per BIP-32 |
 
 #### Description
@@ -106,7 +107,7 @@ The paths defined in [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-00
 
 If the `display` parameter is `0` and the path is not standard, an error is returned.
 
-If the `display` parameter is `1`, the result is also shown on the secure screen for verification. The UX flow shows on the device screen the exact path and the complete serialized extended pubkey as defined in [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) for that path. If the path is not standard, an additional warning is shown to the user. 
+If the `display` parameter is `1`, the result is also shown on the secure screen for verification. The UX flow shows on the device screen the exact path and the complete serialized extended pubkey as defined in [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) for that path. If the path is not standard, an additional warning is shown to the user.
 
 ### REGISTER_WALLET
 
@@ -116,23 +117,23 @@ Registers a wallet policy on the device, after validating it with the user.
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 02    |
 
 **Input data**
 
-| Length          | Name            | Description |
-|-----------------|-----------------|-------------|
+| Length          | Name            | Description                                |
+| --------------- | --------------- | ------------------------------------------ |
 | `<variable>`    | `policy_length` | The length of the policy (unsigned varint) |
-| `policy_length` | `policy`        | The serialized wallet policy |
+| `policy_length` | `policy`        | The serialized wallet policy               |
 
 The `policy` is serialized as described [here](wallet.md). At this time, no policy can be longer than 252 bytes, therefore the `policy_length` field is always encoded as 1 byte.
 
 **Output data**
 
 | Length | Description                |
-|--------|----------------------------|
+| ------ | -------------------------- |
 | `32`   | The `wallet_id`            |
 | `32`   | The `hmac` for this wallet |
 
@@ -156,26 +157,25 @@ Get a receive or change a address for a registered or default wallet, after vali
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 03    |
 
 **Input data**
 
-| Length | Name            | Description |
-|--------|-----------------|-------------|
-| `1`    | `display`       | `0` or `1`  |
-| `32`   | `wallet_id`     | The id of the wallet |
+| Length | Name            | Description                                            |
+| ------ | --------------- | ------------------------------------------------------ |
+| `1`    | `display`       | `0` or `1`                                             |
+| `32`   | `wallet_id`     | The id of the wallet                                   |
 | `32`   | `wallet_hmac`   | The hmac of a registered wallet, or exactly 32 0 bytes |
-| `1`    | `change`        | `0` for a receive address, `1` for a change address |
-| `4`    | `address_index` | The desired address index (big-endian) |
-
+| `1`    | `change`        | `0` for a receive address, `1` for a change address    |
+| `4`    | `address_index` | The desired address index (big-endian)                 |
 
 **Output data**
 
-| Length      | Description     |
-|-------------|-----------------|
-| <variable>  | The wallet address for the given change/address_index |
+| Length     | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| <variable> | The wallet address for the given change/address_index |
 
 #### Description
 
@@ -201,23 +201,23 @@ Given a PSBTv2 and a registered wallet (or a standard one), sign all the inputs 
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 04    |
 
 **Input data**
 
-| Length  | Name                   | Description |
-|---------|------------------------|-------------|
-| `<var>` | `global_map_size`      | The number of key/value pairs of the global map of the psbt |
-| `32`    | `global_map_keys_root` | The Merkle root of the keys of the global map |
-| `32`    | `global_map_vals_root` | The Merkle root of the values of the global map |
-| `<var>` | `n_inputs`             | The number of inputs of the psbt | 
-| `32`    | `inputs_maps_root`     | The Merkle root of the vector of Merkleized map commitments for the input maps |
-| `<var>` | `n_outputs`            | The number of outputs of the psbt | 
+| Length  | Name                   | Description                                                                     |
+| ------- | ---------------------- | ------------------------------------------------------------------------------- |
+| `<var>` | `global_map_size`      | The number of key/value pairs of the global map of the psbt                     |
+| `32`    | `global_map_keys_root` | The Merkle root of the keys of the global map                                   |
+| `32`    | `global_map_vals_root` | The Merkle root of the values of the global map                                 |
+| `<var>` | `n_inputs`             | The number of inputs of the psbt                                                |
+| `32`    | `inputs_maps_root`     | The Merkle root of the vector of Merkleized map commitments for the input maps  |
+| `<var>` | `n_outputs`            | The number of outputs of the psbt                                               |
 | `32`    | `outputs_maps_root`    | The Merkle root of the vector of Merkleized map commitments for the output maps |
-| `32`    | `wallet_id`            | The id of the wallet |
-| `32`    | `wallet_hmac`          | The hmac of a registered wallet, or exactly 32 0 bytes |
+| `32`    | `wallet_id`            | The id of the wallet                                                            |
+| `32`    | `wallet_hmac`          | The hmac of a registered wallet, or exactly 32 0 bytes                          |
 
 **Output data**
 
@@ -230,7 +230,6 @@ Using the information in the PSBT and the wallet description, this command verif
 For a registered wallet, the hmac must be correct.
 
 For a default wallet, `hmac` must be equal to 32 bytes `0`.
-
 
 #### Client commands
 
@@ -250,8 +249,8 @@ Returns the fingerprint of the master public key, as defined in [BIP-0032#Key id
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 05    |
 
 **Input data**
@@ -261,7 +260,7 @@ No input data.
 **Output data**
 
 | Length | Description                |
-|--------|----------------------------|
+| ------ | -------------------------- |
 | `4`    | The master key fingerprint |
 
 #### Description
@@ -269,7 +268,6 @@ No input data.
 The fingerprint is necessary to fill the key origin information for some PSBT fields, or to create wallet descriptors.
 
 User interaction is not required for this command.
-
 
 ### SIGN_MESSAGE
 
@@ -281,21 +279,21 @@ The device shows on its secure screen the BIP-32 path used for signing, and the 
 
 **Command**
 
-| *CLA* | *INS* |
-|-------|-------|
+| _CLA_ | _INS_ |
+| ----- | ----- |
 | E1    | 10    |
 
 **Input data**
 
-| Length  | Name              | Description |
-|---------|-------------------|-------------|
-| `1`     | `n`               | Number of derivation steps (maximum 6) |
-| `4`     | `bip32_path[0]`   | First derivation step (big endian) |
-| `4`     | `bip32_path[1]`   | Second derivation step (big endian) |
-|         | ...               |             |
-| `4`     | `bip32_path[n-1]` | `n`-th derivation step (big endian) |
+| Length  | Name              | Description                                                   |
+| ------- | ----------------- | ------------------------------------------------------------- |
+| `1`     | `n`               | Number of derivation steps (maximum 6)                        |
+| `4`     | `bip32_path[0]`   | First derivation step (big endian)                            |
+| `4`     | `bip32_path[1]`   | Second derivation step (big endian)                           |
+|         | ...               |                                                               |
+| `4`     | `bip32_path[n-1]` | `n`-th derivation step (big endian)                           |
 | `<var>` | `msg_length`      | The byte length of the message to sign (Bitcoin-style varint) |
-| `32`    | `msg_merkle_root` | The Merkle root of the message, split in 64-byte chunks |
+| `32`    | `msg_merkle_root` | The Merkle root of the message, split in 64-byte chunks       |
 
 The message to be signed is split into `ceil(msg_length/64)` chunks of 64 bytes (except the last chunk that could be smaller); `msg_merkle_root` is the root of the Merkle tree of the corresponding list of chunks.
 
@@ -303,8 +301,8 @@ The theoretical maximum valid length of the message is 2<sup>32</sup>-1 = 4&nbsp
 
 **Output data**
 
-| Length | Description |
-|--------|-------------|
+| Length | Description                                                                    |
+| ------ | ------------------------------------------------------------------------------ |
 | `65`   | The returned signature, encoded in the standard Bitcoin message signing format |
 
 The signature is returned as a 65-byte binary string (1 byte equal to 32 or 33, followed by `r` and `s`, each of them represented as a 32-byte big-endian integer).
@@ -324,13 +322,13 @@ The client must respond to the `GET_PREIMAGE`, `GET_MERKLE_LEAF_PROOF` and `GET_
 
 This section documents the commands that the Hardware Wallet can request to the client when returning with a `SW_INTERRUPTED_EXECUTION` status word.
 
-| CMD | COMMAND NAME          | DESCRIPTION |
-|-----|-----------------------|-------------|
-|  10 | YIELD                 | Receive some elements during command execution |
-|  40 | GET_PREIMAGE          | Return the preimage corresponding to the given sha256 hash |
-|  41 | GET_MERKLE_LEAF_PROOF | Returns the Merkle proof for a given leaf |
-|  42 | GET_MERKLE_LEAF_INDEX | Returns the index of a leaf in a Merkle tree |
-|  A0 | GET_MORE_ELEMENTS     | Receive more data that could not fit in the previous responses |
+| CMD | COMMAND NAME          | DESCRIPTION                                                    |
+| --- | --------------------- | -------------------------------------------------------------- |
+| 10  | YIELD                 | Receive some elements during command execution                 |
+| 40  | GET_PREIMAGE          | Return the preimage corresponding to the given sha256 hash     |
+| 41  | GET_MERKLE_LEAF_PROOF | Returns the Merkle proof for a given leaf                      |
+| 42  | GET_MERKLE_LEAF_INDEX | Returns the index of a leaf in a Merkle tree                   |
+| A0  | GET_MORE_ELEMENTS     | Receive more data that could not fit in the previous responses |
 
 ### YIELD
 
@@ -347,10 +345,12 @@ The client must respond with an empty message.
 The `GET_PREIMAGE` command requests the client to reveal a SHA-256 preimage.
 
 The request contains:
+
 - `1` byte: must equal 0, reserved for future usage. (The client should abort if non-zero);
 - `32` bytes: a sha-256 hash.
 
 The response must contain:
+
 - `<var>`: the length of the preimage, encoded as a Bitcoin-style varint;
 - `1` byte: a 1-byte unsigned integer `b`, the length of the prefix of the pre-image that is part of the response;
 - `b` bytes: corresponding to the first `b` bytes of the preimage.
@@ -364,11 +364,13 @@ If the pre-image is too long to be contained in a single response, the client sh
 The `GET_MERKLE_LEAF_PROOF` command requests the hash of a given leaf of a Merkle tree, together with the Merkle proof.
 
 The request contains:
+
 - `32` bytes: the Merkle root hash;
 - `<var>` bytes: the tree size `n`, encoded as a Bitcoin-style varint;
 - `<var>` bytes: the leaf index `i`, encoded as a Bitcoin-style varint.
 
 The client must respond with:
+
 - `32` bytes: the hash of the leaf with index `i` in the requested Merkle tree;
 - `1` byte: the length of the Merkle proof;
 - `1` byte: the amount `p` of hashes of the proof that are contained in the response;
@@ -383,10 +385,12 @@ If the proof is too long to be contained in a single response, the client should
 The `GET_MERKLE_LEAF_INDEX` requests the index of a leaf with a certain hash. if multiple leafs have the same hash, the client could respond with either.
 
 The request contains:
+
 - `32` bytes: the Merkle root hash;
 - `32` bytes: the leaf hash.
 
 The response contains:
+
 - `1` byte: `1` if the leaf is found, `0` if matching leaf exists;
 - `<var>`: the index of the leaf, encoded as a Bitcoin-style varint.
 
@@ -401,10 +405,10 @@ All of the elements in the queue must all be byte strings of the same length; th
 The request is empty.
 
 The response contains:
+
 - `1` byte: the number `n` of returned element;
 - `1` byte: the size `s` of each returned element;
 - `n * s` bytes: the concatenation of the `n` returned elements.
-
 
 ## Security considerations
 
@@ -413,8 +417,9 @@ Some of the client commands are used to allow the client to reveal some informat
 In designing the interactive protocol, care is taken to avoid security risks associated with a malicious, possibly compromised client.
 
 All the current commands use a commit-and-reveal approach: the APDU that starts the protocol (first message) commits to all the relevant data (for example, the entirety of the PSBT), by using hashes and/or Merkle trees. Any time the client is asked to reveal some committed information, the app does not consider it trusted:
+
 - If a preimage is asked via `GET_PREIMAGE`, the hash is computed to validate that the correct preimage is returned by the client.
 - If a Merkle proof is asked via `GET_MERKLE_LEAF_PROOF`, the proof is verified.
-- If the index of a leaf is asked `GET_MERKLE_LEAF_INDEX`, the proof for that element is requested via `GET_MERKLE_LEAF_PROOF` and the proof verified, *even if the leaf value is known*.
+- If the index of a leaf is asked `GET_MERKLE_LEAF_INDEX`, the proof for that element is requested via `GET_MERKLE_LEAF_PROOF` and the proof verified, _even if the leaf value is known_.
 
 Care needs to be taken in designing protocols, as the client might lie by omission (for example, fail to reveal that a leaf of a Merkle tree is present during a call to `GET_MERKLE_LEAF_INDEX`).
