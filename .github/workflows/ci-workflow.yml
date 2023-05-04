@@ -38,7 +38,8 @@ jobs:
         run: |
           make DEBUG=0 COIN=avian BOLOS_SDK=${{ matrix.SDK }} && mv bin/ avian-bin/
           make clean
-          make DEBUG=0 COIN=avian_testnet && mv bin/ avian-testnet-bin/
+          make && mv bin/ avian-testnet-bin/
+
       - name: Upload Avian app binary
         uses: actions/upload-artifact@v2
         with:
